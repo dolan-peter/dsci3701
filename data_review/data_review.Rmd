@@ -1,0 +1,153 @@
+---
+title: "Tutorial"
+output: learnr::tutorial
+runtime: shiny_prerendered
+---
+
+```{r setup, include=FALSE}
+library(learnr)
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r datatypesetup,echo=FALSE}
+data.type=list(m1=data.frame(),m2=numeric(),m3=character(),m4=list(),m5=logical())
+```
+
+
+## Overview {data-progressive=TRUE}
+
+The purpose of this document is to review some basic ideas about data and programming while also  introducing some new examples in both R and python.
+
+### Data forms
+
+From the first course you may recall that data when it is in a form suitable for use by a computer comes in a myriad of forms. Some examples include:
+
+* Data as table
+* Data as tree
+* Data as graph
+* Data as stream
+
+More generally, a computer science course will introduce the interested student to a large variety of *data structures* whose purpose is to make a number of interactions (such as calculations, lookups, modifications, insertions, deletions, to name but a few) efficient.
+
+We are not overly concerned in this course about such things.  We **will** care about *data objects* which is something both R and Python can use.
+
+```{r data-form, echo=FALSE}
+question("Which of the following best represents the type of data encoded in a JSON object?",
+         answer("table"),
+         answer("tree",correct=TRUE),
+         answer("graph"),
+         answer("stream")
+)
+
+```
+
+### Data types
+
+You should also recall that computer languages have expressions known as **variables** that can hold data.  These variables contain values but they also come with a **data type**.  Sometimes these data types are simple (such as numeric values), and sometimes they are complicated (such as objects).  But one of the keys to mastering languages such as R and python lies in always being intuitively aware of the **data type** of an expression.  The data type determines what meaningful manipulations can be done with an expression.
+
+Modify the following code so that the following conditions are satisfied (you might want to review basic R syntax before proceeding)
+
+Requirement| Condition
+-----------|-----------
+1          | The sum of the two numeric variables is stored in a variable called `sum`
+2          | The two character variables are concatenated together into a variable called `concat`.  Let them be separated by a space when you do this.
+3          | The two logical variables are `anded` together into a variable called `logical.and`
+4          | The variable `df` is a data.frame with 10 rows and two columns.  The first column is named `letters` and stores the first 10 letters, while the second column is named `numbers` and contains the numbers 1 through 10
+5          | Create a simple function called `myfunc` that takes the difference of two variables
+
+```{r datatypes, exercise=TRUE, exercise.setup="datatypesetup"}
+num.1 <- 2
+num.2 <- 3
+sum <-  # Add code to the left of this comment
+char.1 = "Data"
+char.2 = "Science"
+concat<- # Add code to the left of this comment
+logical.1<-TRUE
+logical.2<-FALSE
+logical.and<- # Add code to the left of this comment
+df<-data.frame(letter=,1:10)
+myfunc<-function(a,b){} # Add code to the left of this comment
+```
+
+### Data types in R
+
+One web page that I particularly like that teaches about programming in R^[https://swcarpentry.github.io/r-novice-inflammation/] makes the distinction between **data types** and **data structures**.  In the education I received (as an undergraduate) these would **both** be examples of a data type (one would be an example of a **primitive data type** and the other **complex (or composite) data type^[https://en.wikipedia.org/wiki/Complex_data_type])**.  To make things even a bit more confusing, the R language handbook^[https://cran.r-project.org/doc/manuals/r-release/R-lang.html] uses slightly different language as well (they use the term **mode** which can be accessed via the R-function`mode()`).
+
+Regardless, the technical distinctions add more complications than are necessary... so I've done my duty and introduced you to the terminology you might hear being used, but I am going to use **data type** and **data structure**.  So the primitive data types and data structures in R^[that we are most interested in] are:
+
+* NULL (rare for use to encounter)
+* closure (a function)
+* logical (TRUEs and FALSEs)
+* integer (whole numbers-- positive, negative, as well as 0)
+* double (decimals)
+* character (words and strings)
+* list (a data structures that contains multiple values-- usually of different data types)
+
+These data types are all values that will be reported by the use of the R function `typeof()`
+
+Example:
+
+```{r}
+sample=list(2,2L,TRUE,2.34,"bob",typeof,NULL)
+typeof(sample)
+types=sapply(sample,typeof)
+```
+
+R also has the following data structures:
+
+* vectors
+* matrices
+* data frames
+* factors
+
+In other languages a **vector** would be called an **array**, a **matrix** would be a multi-dimensional array, a **data frame** doesn't have any common analogs in other languages, and a **factor** would be known as an **enumerated type**.
+
+In R **vectors** are fundamental building blocks... In R terminology a vector has a **mode**.  Think of it as generalized primitive data type.  Example include: **numeric**, **character**, **logical**, and **function**.  Note that integers and doubles would both show up as being of mode **numeric**.  While `typeof(typeof))` and `mode(typeof)` return "closure" and "function" respectively.
+
+<!-- consider beefing up function discussion -->
+
+<!-- add a quiz here-->
+
+
+More sophisticated data can be stored as **objects** whose **class attribute** determines how the object  is treated.  For example, R uses objects for `data frames` and `Dates`:
+
+```{r}
+some.date<-as.Date("2019-09-13") #Using default format of yyyy-mm-dd
+some.date
+format(some.date,"%d %b %Y")
+
+data.frame(letters=letters[1:5],nums=1:5)
+```
+
+### Data types in Python
+
+I'll discuss Python version 3.7.3^[https://docs.python.org/3/library/datatypes.html].  We'll keep the same data type versus data structure distinction.  Some examples of data types (sub divided)
+
+* int
+* float
+* str
+* bool
+* code objects
+* null object
+
+
+Python has some nice mechanisms built-in for data structures that go well beyond what we'll cover in this course.
+
+* arrays
+* datetime
+* date
+* dict
+* list
+* set
+* tuple
+
+We can use the Python-function `type()` to get the Python data type:
+```{python}
+type(1337)
+type(True)
+type(13.37)
+type("stuff")
+type([1,2,3])
+type({'key':'value'})
+type({1,2,3})
+```

@@ -1,0 +1,90 @@
+---
+title: "Tutorial"
+output: learnr::tutorial
+runtime: shiny_prerendered
+---
+
+```{r setup, include=FALSE}
+library(learnr)
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+
+## Overview {data-progressive=TRUE}
+
+The purpose of this document is to introduce you to some basic mathematical ideas in a strongly pragmatic environment and reinforce those ideas by examples in both R and python.
+
+
+The focus of this document will be on *practical applications*.  
+
+## The math
+
+The first mathematical idea that we are going need is **the vector**.  This is the purview of **linear algebra** and we are not going to have time to learn all of it.  The **first* key idea is as follows:
+
+$$
+\textrm{Key Idea 1: A vector is an array}
+$$
+
+This simple statement does a *terrible* disservice to the underlying mathematics, but it really captures the essence of what we, mostly, will care about.  Let's see an example:
+
+### Vector example in R
+
+In the language of R, what almost every other language calls an array is called a **vector**.  We can explicitly build one using the R-function `c()`, or we can use the output of a function such as `seq()` (which builds sequences of values), or we can use an expression such as `3:10`:
+
+```{r}
+vec<-c(10,20,30,40,50)
+vec
+vec[1] #1-based in R
+vec[2]
+vec[c(1,2)]
+vec[c(1,1,4)]
+vec[2:3]
+```
+
+### Vector example in Python
+
+It's important to notice that in both languages we use `var[i]` to get at an individual entry, but R is 1-based and Python is 0-based.  So the **first** element in an array is `var[1]` in R and it is `var[0]` in Python^[this expression will generate an error in R].
+
+```{python}
+vec=[10,20,30,40,50]
+vec
+vec[0] #0-based in Python
+vec[1]
+indices=(1,2)
+[vec[i] for i in indices]
+indices=(1,1,4)
+[vec[i] for i in indices]
+```
+
+### Why vectors?
+
+If a vector is just an array... then why do we care about the mathematical idea of vectors?
+
+This is where things get interesting.  In mathematics your first interpretation of a vector is as a list of numbers... but it comes equipped with **vector operations**.  These are things that take **two** vectors and produced a **third**.  For example:  Addition:
+
+```{r}
+vector.one<-c(10,20,30,40)
+vector.two<-c(-1,2,-5,7)
+vector.one+vector.two
+```
+
+```{python}
+vectorOne=[10,20,30,40]
+vectorTwo=[-1,2,-5,7]
+vectorOne+vectorTwo
+```
+
+**DANGER**:  That did something else. That **concatenated** the two.  If we want the arrays to behave like vectors in python we need to use `numpy`:
+
+```{python}
+import numpy as np
+vectorOne=np.array([10,20,30,40])
+vectorTwo=np.array([-1,2,-5,7])
+vectorOne+vectorTwo
+```
+
+So what makes something a vector anyway?  
+
+### The mathematical details
+
+stuff

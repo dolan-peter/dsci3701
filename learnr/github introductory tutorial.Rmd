@@ -1,0 +1,62 @@
+---
+title: "Learnr Examples"
+author: "Peter Dolan"
+date: "6/4/2019"
+output: learnr::tutorial
+runtime: shiny_prerendered
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(learnr)
+```
+
+This is a chance for me to learn how to use the `learnr` package in order to make tutorials (which is what I want for DSci 3701).  Carefully **note the YAML header** (using RStudio's RMarkdown templates ensures that I don't need to memorize this):
+```
+title: "Learnr Examples"
+author: "Peter Dolan"
+date: "6/4/2019"
+output: learnr::tutorial
+runtime: shiny_prerendered
+```
+
+Most of this information comes from https://rstudio.github.io/learnr/index.html (some of which I typed verbatim and without local attribution).  One thing... this uses the `shiny_prerendered` engine and generates an HTML file.  If the HTML file is deleted and the document re-run the system remembers the inputs (need to figure out where that information lives).
+
+Also, Chunks need to have unique chunk labels-- this makes it possible to store and reload student work.
+
+**Each chunk is (without using global chunks) executed locally**.  This ensures that the exercises can be done independently.
+
+## Running
+
+Use 
+```
+learnr::run_tutorial("name",package="learnr")
+```
+to launch from the console.
+
+
+## Devices
+
+Types of `learnr` devices:
+
+* narative, figures, illustrations, and equations
+* code exercises (r code chunks that users can edit an execute directly) (includes options for **exercise checking**)
+* Quizzes
+* Videos (via youtube and vimeo)
+* Interactive shiny componenets
+
+Tutorials preserve work so users can return to the tutorial later and pick up where they left off.
+
+## Hello Tutorial
+
+First example of an exercise:
+
+```{r addition, exercise=TRUE}
+1+1
+```
+
+Let's see if we can use Python too:
+
+```{python addition2, exercise=TRUE}
+1+1
+```
