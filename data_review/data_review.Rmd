@@ -54,8 +54,10 @@ Requirement| Condition
 3          | The two logical variables are `anded` together into a variable called `logical.and`
 4          | The variable `df` is a data.frame with 10 rows and two columns.  The first column is named `letters` and stores the first 10 letters, while the second column is named `numbers` and contains the numbers 1 through 10
 5          | Create a simple function called `myfunc` that takes the difference of two variables
+```{r datatypes-check}
 
-```{r datatypes, exercise=TRUE, exercise.setup="datatypesetup"}
+```
+```{r datatypes, exercise=TRUE, exercise.setup="datatypesetup",exercise.checker=}
 num.1 <- 2
 num.2 <- 3
 sum <-  # Add code to the left of this comment

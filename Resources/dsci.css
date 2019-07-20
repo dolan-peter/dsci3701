@@ -1,0 +1,6 @@
+.scroll {
+  max-height: 300px;
+  float: left;
+  width: 910px;
+  overflow-y: auto;
+}

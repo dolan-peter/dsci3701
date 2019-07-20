@@ -1,0 +1,79 @@
+---
+title: "Tutorial"
+output: learnr::tutorial
+runtime: shiny_prerendered
+---
+
+```{r setup, include=FALSE}
+library(learnr)
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+
+## Linux
+
+Most of you are familiar with using a mouse and a keyboard to control your computer.  Fewer have familiarity with a pure **text based** control interface. In the past, it was not uncommon to have one powerful machine hooked up to a number of **terminals** that allowed a user to interact with the machine (when I was an undergraduate we had a VAX computer and each dorm had one terminal that connected to the VAX).  These days it is more common to use a program called a **terminal emulator** to allow the conventions of those older machines to be used.  There are a large number of **terminal types**.  The different terminal types recognize **special sequences** that change the output-- perhaps they move the cursor, or perhaps they change the color of the text-- some even print graphical characters like "blocks" and were a form of primitive graphics.  I'm most using to `vt100`, but the RStudio Terminal window (more on that in just a bit) uses `xterm-256color`.  
+
+On windows you might see people using `cmd` or `powershell`.  On Macintosh you 
+
+### Exercise 
+
+*Here's a simple exercise with an empty code chunk provided for entering the answer.*
+
+Write the R code required to add two plus two:
+
+```{r two-plus-two, exercise=TRUE}
+
+```
+
+### Exercise with Code
+
+*Here's an exercise with some prepopulated code as well as `exercise.lines = 5` to provide a bit more initial room to work.*
+
+Now write a function that adds any two numbers and then call it:
+
+```{r add-function, exercise=TRUE, exercise.lines = 5}
+add <- function() {
+  
+}
+```
+
+## Topic 2
+
+### Exercise with Hint
+
+*Here's an exercise where the chunk is pre-evaulated via the `exercise.eval` option (so the user can see the default output we'd like them to customize). We also add a "hint" to the correct solution via the chunk immediate below labeled `print-limit-hint`.*
+
+Modify the following code to limit the number of rows printed to 5:
+
+```{r print-limit, exercise=TRUE, exercise.eval=TRUE}
+mtcars
+```
+
+```{r print-limit-hint}
+head(mtcars)
+```
+
+### Quiz
+
+*You can include any number of single or multiple choice questions as a quiz. Use the `question` function to define a question and the `quiz` function for grouping multiple questions together.*
+
+Some questions to verify that you understand the purposes of various base and recommended R packages:
+
+```{r quiz}
+quiz(
+  question("Which package contains functions for installing other R packages?",
+    answer("base"),
+    answer("tools"),
+    answer("utils", correct = TRUE),
+    answer("codetools")
+  ),
+  question("Which of the R packages listed below are used to create plots?",
+    answer("lattice", correct = TRUE),
+    answer("tools"),
+    answer("stats"),
+    answer("grid", correct = TRUE)
+  )
+)
+```
+

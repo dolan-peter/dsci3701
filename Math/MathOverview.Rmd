@@ -186,3 +186,10 @@ So what makes something a vector anyway?
 
 ## The mathematical details
 
+$$
+\begin{aligned}
+\textrm{Average Rate of Change} &= \frac{f(x+h) - f(x)}{(x+h)-x}\\
+&=\frac{f(x+h) - f(x)}{h}\\
+\end{aligned}
+$$
+IN other words it is the **change in y** over the **change in x**.  This is also known as the **slope** of a line.  You can see 
