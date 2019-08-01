@@ -8,69 +8,251 @@ runtime: shiny_prerendered
 library(learnr)
 knitr::opts_chunk$set(echo = FALSE)
 ```
-TRY
 
+FORMULAS
 
-## Topic 1
+Many function in R understand a special type of **formula language**.  Some understand more complicated versions than others, but the basic idea is the same-- namely we specify the relationship between variables symbolically.
 
-### Exercise 
+Like an equals sign the symbol `~` separates the left hands side (LHS) from the right hand side (RHS) of the expression.
 
-*Here's a simple exercise with an empty code chunk provided for entering the answer.*
+THE LHS is the **resposne variable**-- note that even if the true relationship between variables is NOT causal one of the two co-variates will be treated as a response variable and the other as an explanatory variable.
 
-Write the R code required to add two plus two:
+The response variable (LHS) is just one variable.  The RHS can be more complicated.  The `+` symbol is used to separate explanatory variables.  So, for example the following expresssion
 
-```{r two-plus-two, exercise=TRUE}
-
+```{r,eval=FALSE}
+weight ~ age + caloric_intake
 ```
 
-### Exercise with Code
+says that the respone variable `weight` is explained (or predicted) by the explanatory variables `age` and `caloric_intake.
 
-*Here's an exercise with some prepopulated code as well as `exercise.lines = 5` to provide a bit more initial room to work.*
+The corresponding equation for the predicted weight is:
 
-Now write a function that adds any two numbers and then call it:
+$$
+\widehat{weight} = \beta_0 + \beta_1\ \textrm{age} + \beta_2\ \textrm{caloric_intake}
+$$
 
-```{r add-function, exercise=TRUE, exercise.lines = 5}
-add <- function() {
-  
+The symbol `:` is used between two explanatory variables and introduces an **interaction term** into the model.  For example:
+
+```{r,eval=FALSE}
+weight ~ age + caloric_intake+age:caloric_intake
+```
+The corresponding equation here is:
+
+$$
+\widehat{weight} = \beta_0 + \beta_1\ \textrm{age} + \beta_2\ \textrm{caloric_intake}+\beta_3\ (\textrm{age})(\textrm{caloric_intake})
+$$
+The variables $\textrm{age}$ and $\textrm{caloric_intake}$ are known as **main** effects.  And ($\textrm{age})(\textrm{caloric_intake})$ is an interaction term.  Unless you have a very compelling reason-- it is usually not a good idea to include interaction terms without also including their corresponding main effects.
+
+The symbol `*` is a short hand for all possible combinations.. so 
+
+```{r,eval=FALSE}
+weight ~ age * caloric_intake
+```
+
+Is a shorthand for
+
+```{r,eval=FALSE}
+weight ~ age + caloric_intake + age:caloric_intake
+```
+
+If three variables are included, such as `y ~ A*B*C` then **all** combinations of the three variables are included (this can quickly lead to combinatorial nightmares so use `*` sparingly)
+
+By default the model will include an intercept term.  IT can be removed using `-1`
+
+Often a function can be used in a formula:
+
+```{r,eval=FALSE}
+weight ~ age + log(calorie_intake)
+```
+
+To protect an expression using `+` as an equation, rather than as a model specification, use `I()`:
+
+```{r,eval=FALSE}
+weight ~ I(age + calorie_intake)
+```
+
+Would correspond to the linear equation:
+
+$$
+\widehat{weight} = \beta_0 + \beta_1\ \left(\textrm{age} + \textrm{caloric_intake}\right)
+$$
+Anoter useful symbol is `.` which represents all columns not otherwise specified (this is most useful when there is a `data=df` named agument in the expression)
+
+One extension to linear regression (and generalized linear regression) comes from **mixed effect modelling**.  Here the idea is that there are two different types of explanatory variables:
+
+1. fixed effects
+1. random effects
+
+I have not found a universally agreed upon definition for those two terms that satisfies me.  There seems to be general agreement that the techniques we will discuss are useful for dealing with correlation caused by group structure and, in paricular, dealing with repeated measurements (which are break the independence assumptions of ordinary regression).
+
+Suppose that you were trying to figure out whether or not some energy drink had an influence on the ability of an individual to shoot a basketball.  Suppose you let a number of people take 100 shots from the free throw line and recorded the proportion that made it into the basket.  You let the same people, if they wished, repeat the test on different occasions, but didn't require it.  
+
+We know that some people are better than others at making baskets...  we would expect such people to have higher proportions than others and we also know that since some people repeated the process the proportions are no longer all independent observations.  Knowledge about who was shooting should influence our guess about the results.  
+
+One approach to deal with this **repeated measurement issue* would be to include a unique id for each participant and use that id to GROUP the attempts.  If the individuals were of importance to us, then we could use a fixed effect model-- and thus estimate a fixed parameter for each individuall-- we could control for the persons skill level by having a separate intercept for each individual.    
+
+However, for our purposes, *people* themselves aren't important in what we are trying to understand... what we really want to know is if the energy drink influences performance.  We would rather think of each individual's talent as a random sample from a large population.
+
+For functions (like `lmer()` that undersstand grouped observations, terms like `(1|studentID)` capture this idea. Such expression occur in the RHS of the model formula.  
+
+If student ID were a factor (in the R sense of the word) than `studentID` would generate $n-1$ indicator variables and there WOULD be a separate intercept for each individual.  The end result would be somehwat the same (a model where every student has a different intercept), however, in the fixed effect case, this intercept would be taken as a FIXED value-- A value to be estimated in its own right.  As a random effect it would,instead, be considered a random variable with its own distribution-- and as such inferences about the mean **and** the variance of that random variable can be made.  In the words of Julian Faraway in his book *Extending the Linear Model with R*:
+
+```
+A random effects approach to modeling is more ambitious in the sense that it attempts to say something about the wider population beyond the particular sample.
+```
+
+Let's look at a quick example that is also from the book. The dataset is included in Faraway's package `faraway`.  It's called `pulp` and it's about how bright the paper produced by a particular plant was, depending upon who was acting as the shift operator:
+
+```{r}
+library(faraway)
+library(lme4)
+data(pulp)
+boxplot(bright~operator,data=pulp)
+```
+
+It certainly looks as if there was a difference.   Here's the model we would get using a traditinoal linear model
+
+```{r}
+model=lm(bright~operator,data=pulp)
+summary(model)
+```
+
+As a refresher... notice that the F-statistic is the same as performing an ANOVA... so this model does show, under a traditional anova, that there is a statistically significant difference.
+
+The baseline was operator a, and the coefficients for the various operators tell how much the value should be changed for the other operators:
+
+```{r}
+library(ggplot2)
+ggplot(data=pulp,aes(x=operator,y=bright,col=operator))+geom_boxplot()+geom_jitter()
+```
+
+This tells us about the differencs between the 4 operators a-d.
+
+Now here is how it looks using random effects:
+
+```{r}
+library(lme4)
+model2=lmer(bright~1+(1|operator),data=pulp)
+summary(model2)
+```
+
+Notice that the summary is quite different  The residuals have, increased-- this makes sense-- we don't have 
+
+The Statistician Gelman [has a short discussion of the issue](https://statmodeling.stat.columbia.edu/2005/01/25/why_i_dont_use/)
+
+And a much longer discussion in his 2005 paper [Why Anova is still good]()
+
+We are going to follow the [getting started with mixed effect models](https://www.jaredknowles.com/journal/2013/11/25/getting-started-with-mixed-effect-models-in-r) tutorial by Jared Knowles
+
+
+
+**Exercise:**: Reproduce the R code from the tutorial above
+
+
+
+```{r}
+```
+
+
+
+https://projecteuclid.org/download/pdfview_1/euclid.aos/1112967698
+## function practice
+
+**Exercise:** Write a function called 'weighted.die` that takes a **vector** of probabilities and a number of rolls $n$
+
+```{r weighted-die exercise}
+weighted.die=function(probs,n){
+  sample(1:6,n,prob=probs,replace=TRUE)  
+}
+
+fair.probs=c(0.17,0.17,0.17,0.17,0.16,0.16)
+unfair.probs=c(0.11,0.22,0.11,0.22,0.11,0.23)
+```
+
+**Exercise:**  Write a function called `two.roll.sum()` that takes a vector of six probabilities and a sum.  It should return the probability that if the die is rolled **twice** the sum will match the argument.   Hint: don't worry about efficiency-- use nested for loops.  If the sum is beyond 12 or less than 2 the function should return 0
+
+
+```{r sum-to exercise}
+two.roll.sum=function(probs,s){
+  p=0
+  for(i in 1:6){
+    for(j in 1:6){
+      if(i+j==s){
+        p=p+probs[i]*probs[j]
+      } 
+    }
+  }
+  p
 }
 ```
 
-## Topic 2
 
-### Exercise with Hint
 
-*Here's an exercise where the chunk is pre-evaulated via the `exercise.eval` option (so the user can see the default output we'd like them to customize). We also add a "hint" to the correct solution via the chunk immediate below labeled `print-limit-hint`.*
+**Exercise:** Write a function called `setDiameter` that takes **three arguments**.  The function returns the distance between the two values that are the farthest apart.  For example, `setDiameter(-1,2,3)`, should return 4 because the two values that are fartherst apart are -1 and 3 and their distance is $\left|-1-3\right| = \left|-4\right|=4$.
 
-Modify the following code to limit the number of rows printed to 5:
+**CSCI Bonus:** Write a function that expects one argument that is a numeric vector.  Have the function return the distance between the two values that are farthest apart in the vector.  (note:  the vector should be able to be of any length at all)
 
-```{r print-limit, exercise=TRUE, exercise.eval=TRUE}
-mtcars
+```{r all-pass exercise}
+
 ```
 
-```{r print-limit-hint}
-head(mtcars)
+TRY CATCH
+formula language  
+
+The R comands `sort()` and `order()` are related to each other but have quite different outputs.  THe `sort()` function will, given a vector, return a vector in sorted order:
+
+```{r}
+set.seed(0)
+(sample<-sample(1:5,20,replace=TRUE))
+sort(sample)
+```
+Meanwhile `order()` will produce the necessary **indices** to put the vector into order:
+
+```{r}
+order(sample)
+sample[order(sample)]
 ```
 
-### Quiz
+The function `order()` is particularly helpful when we hava a data.frame and we wish to reorder the rows based upon the values in a specific column:
 
-*You can include any number of single or multiple choice questions as a quiz. Use the `question` function to define a question and the `quiz` function for grouping multiple questions together.*
-
-Some questions to verify that you understand the purposes of various base and recommended R packages:
-
-```{r quiz}
-quiz(
-  question("Which package contains functions for installing other R packages?",
-    answer("base"),
-    answer("tools"),
-    answer("utils", correct = TRUE),
-    answer("codetools")
-  ),
-  question("Which of the R packages listed below are used to create plots?",
-    answer("lattice", correct = TRUE),
-    answer("tools"),
-    answer("stats"),
-    answer("grid", correct = TRUE)
-  )
-)
+```{r}
+grades=sample(c('A','B','C','D','F'),20,replace=TRUE)
+(df=data.frame(nums=sample,grades=grades))
+df[order(df$nums),]
+df[order(df$grades),]
 ```
 
+The `order()` function will sort on multiple keys:
+
+```{r}
+df[order(df$grades,df$numbs),]
+```
+
+**Exercise:**
+Write a function that takes a single data.frame as an input.  Assume that the first column is a special **blocking variable** of some sort.  Call the remaining variables (columns) the data variables.
+
+Your function should return all rows in which the data variable values are *repeated*. For example.  In the following table:
+
+blocking | data 1 | data 2 | $\cdots$ | data n
+0        |  A     |  10    |          |  Jesse
+0        |  B     |  10    |          |  Jesse
+1        |  A     |  10    |          |  Jesse
+
+We have $n$ data variables.  The first and the third row have all those values identical (we are assuming that the omitted columns match too).  The second row has many values in common with the first and third, bu since the value for `data 1` is different then it is not repeated.
+
+The function would return
+
+blocking | data 1 | data 2 | $\cdots$ | data n
+0        |  A     |  10    |          |  Jesse
+1        |  A     |  10    |          |  Jesse
+
+The main idea is that you want to find rows where **all** the data-values are repeated
+
+There is one further requirement-- the data frame should be ordered by the data fields-- first ordering by `data 1`, followed by `data 2`, etc.
+
+
+```{r find-repeats exercise}
+```
+## Topic 1
+
+https://rcompanion.org/handbook/G_03.html

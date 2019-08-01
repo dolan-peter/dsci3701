@@ -388,7 +388,7 @@ Now read [B.1.3](https://socialsciences.mcmaster.ca/jfox/Books/Applied-Regressio
 Use the R function `solve` to find the inverse to `mat`.  Assign it to the variable `inv`.  Test that `mat%*%inv` = `inv%*%mat` is approximately $I_4$.  Note... that floating point arithemtic will ensure that desired inverse will not *quite* match $I_4=$`diag(1,4)`.  But it will be close (try rounding the product to 3 places and see what happens)
 
 ```{r matrix-2 exercise}
-seed(0)
+set.seed(0)
 raw=sample(-3:3,replace=TRUE,16)
 mat=matrix(raw,nrow=4)
 #Find inverse here
@@ -1536,12 +1536,27 @@ Write a function that takes two arguments:
 call the function `.f`.  
 ```{r abs-exercise exercise}
 .f=function(x,dat){
-  
+  sum(abs(x-dat))
 }
 .g=Vectorize(.f,vectorize.args="x")
 curve(.g(x,c(0,1)),-3,3)
 ```
 
+### ridge regression
+
+We have looked at 2 cost functions:
+
+* $\sum \textrm{residuals}^2$
+* $\sum \left|\textrm{residuals}\right|$
+
+Another interesting approach tries to balance the accuracy with a restriction on the **parameters*
+
+$$
+\sum \textrm{residuals}^2 + \lambda \sum \textrm{parameter values}^2
+$$
+The real value $\lambda$ is a **hyper parameter**.  When $\lambda=0$ we have the usual OLS (**ordinary least sum of squares**).  Otherwise the sum of squares of the parameters influences the result.
+
+This is called **ridge regresssion**
 
 ## Exponential Family
 
@@ -1890,4 +1905,91 @@ Now read this [nice introduction](https://towardsdatascience.com/on-average-your
 
 ENTROPY
 GINI INDEX
-DISTRIBUTION
+
+## Probabiity Refresher
+
+## Bayes Rule
+
+Bayes rule is a deceptively simple equation.  To set the stage let's start with a a thought experiment.
+
+Imagine that you are given a die to roll and you want to figure out whether or not the die is fair.
+
+With no other place to start it would be reasonable to begin your assessment assuming that each face was equally possible.  You could then roll the die repeatedly and keep track of the average number of times each value occurred.  
+
+Near the beginning of you rolled 3 sixes in a row you might start thinking that the sixes are more likely... however, if this occurred after rolling the die a couple hundred times then it would be easier to chalk it up to a lucky roll (especially since the probability of getting 3 sixes in a row on a fair die is about 1 out of 216).
+
+Now let's define some terminology.
+
+The sample space is the set of possible die rolls.  It is $\Omega=\left\{1, 2, 3, 4, 5, 6\right\}$.  Let's use the letter $D$ to represent the **random variable** that represents the possible results from rolling the die.   In this particular situation the sample space is naturally **partitioned** into six **events**:
+
+$$
+\begin{aligned}
+A_1 &= \left\{1\right\}\\
+A_2 &= \left\{2\right\}\\
+A_3 &= \left\{3\right\}\\
+A_4 &= \left\{4\right\}\\
+A_5 &= \left\{5\right\}\\
+A_6 &= \left\{6\right\}\\
+\end{aligned}
+$$
+
+The more compact way to represent the situation would be:
+
+$$
+A_i = \left\{i\right\}\quad \textrm{for }i \in \Omega
+$$
+It would also be pretty natural to produce a short hand for our probabilities too:
+
+$$
+p_i = \textrm{P}(D=i)
+$$
+(Ask me if that last equation doesn't make immediate sense to you)
+
+Notice that the six events we have described have two important properties:
+
+1. Together they *cover* the entire sample space
+1. The events have no outcomes in common
+
+This is the formal definition of a **partition**.
+
+Our fundamental strategy for figuring out if the die is fair or not is to calculate the values of $p_i$.  At each step we have a **best guess* to the true values of $p_i$.  We proceed as follows:
+
+1. Roll the die
+1. Update our best guess for every $p_i$
+1. Repeat... lots
+
+In Bayesian statistics we call the best estimate *just before* rolling again the **prior distribution**.  After we get more data our updated estimate is the **posterior distribution**
+
+So let's take a break and review **Bayes rule**.
+
+We start with a sample space $\Omega$ that can be exhaustively covered by $n$ mutually exclusive events $\left\{A_i\right\}$.  That's like the 6 possible results of rolling the die.
+
+We then consider some event $C$-- usually one that 
+
+$$
+\begin{aligned}
+\Omega &= A_1 \cup A_2 \cup \cdots \cup A_n\\
+A_i \cap A_j &= \emptyset\qquad(\textrm{for } i \ne j)\\
+\end{aligned}
+$$
+## Linear Combinations
+
+For any vector space, a **linear combination** is a collection of components added together.  Each component is comprised of a vector and a scalar.  For example the following expression is a **linear combination** of the vectors $(3,4,-1)$ and $(1,-2,0)$
+
+$$
+2(3,4,-1) + (-3)(1,-2,0)
+$$
+Numbers can be considered as 1 dimensional vectors... so it makes sense to talk about linear combinations of numbers too.  A surprising amount of mathematics arises from this idea and its generalizations.  One minor generalization ignores the vector space requirement.  For example, consider linear combinations of integers.  For example we might consider linear combinations of 6 and 9.  That would be any expression of the form $a6 + b9$ where $a,b \in \mathbb{Z}$. There can be a bit of confusion in the terminology because one would call the expression $(-1)*6+1*9$ a linear combination of 6 and 9, but one would also call 3 a linear combination of 6 and 9 because $(-1)*6+1*9=3$.  Both are correct.  The first contains a bit more information because, for example, $1*6+(0)*9=6$ is a linear combination of 6 and 9, but so is $(-2)*6+2*9=6$.  To keep things straight we will always refer to the multipliers as scalars in this situation... even though we might not be referring to a proper vector space.  
+
+In the example $(-1)*6 + 1*9=3$, 3 is a linear combination of 6 and 9, using the  the scalars were -1 and 1.
+
+Also notice that a **weighted average** of values is a linear combination as well, but with the special property that the scalars all add to 1.  It is an interesting (and useful) fact that the weighted average of a set of numbers is somewhere between the mininum number and the maximum number.
+ADD EXERCISE HERE!
+
+In the case of vectors where the scalars are more extensive, such as $\mathbb{R}$, there are actually situations where there is only ONE linear combination (in the first sense) that will generate the same value (the linear combination in the second sense).  This is completely determined by the nature of the vectors involved.  A set of vectors with this property is called **linearly independent**.
+
+It's not as confusing as you might think.  For example the set $(1,0,0),(0,1,0)$ is linearly independent.
+
+The set of all linear combinations (in the seconds sense of the word) is called the **span** of a set of vectors.
+
+If a linearly indpendent set of vectors spans a set, the vectors are also known as a **basis**.  Every element in the set can be uniquely written as the lienar combination of the basis.

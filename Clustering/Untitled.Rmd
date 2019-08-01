@@ -1,0 +1,27 @@
+---
+title: "Tutorial"
+output: learnr::tutorial
+runtime: shiny_prerendered
+---
+
+```{r setup, include=FALSE}
+library(learnr)
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+
+## Clustering
+
+There are many approaches to clustering:
+
+* Classification trees using `method="anova" (supervised learning)
+* $k$ nearest neighbor clustering (supervised learning)
+
+## $k$ nearest neighbor
+
+Suppose we have data in table form.  One attribute is the clustering attribute the rest act as explanatory variables.  What we want to do is use the knowledge that we already have to make an educated guess as to the category to which some other element belongs.  This can be done for binary categories as easily as for any other, so let's use the UCLA data-set that we have previously examined:
+
+```{r}
+
+```
+`

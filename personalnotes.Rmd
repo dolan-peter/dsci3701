@@ -1,0 +1,110 @@
+---
+title: "PersonalNotes"
+author: "Peter Dolan"
+date: "7/25/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+When I am calculating the standard deviation for the uniform distribution the convergence rate is not only slow, but frequently howevers near a specific value for longer than I would like (making the `threshold` difference small enough that the loop stops)
+
+It occurs to me that instead of taking the standard deviation of newly enlarged data set, I could take the average of the standard deviations. 
+
+After all the sample standard deviation is an unbiased estimator of the true standard deviation... so averaging $k$ sized blocks should approach the true standard deviation value.
+
+If that's the case then how similar is averaging two blocks to combining them all?
+
+Well... let's see what happens when we add them?
+
+$$
+\begin{aligned}
+\textrm{SD}(X_1 + X_2) &= \sqrt{s_1^2+s_2^2}& \textrm{(by independence)}\\
+&=\sqrt{\frac{\sum (x_{1i}-\overline{X_1})^2}{n-1} + \frac{\sum (x_{2j}-\overline{X_2})^2}{n-1}}\\
+&=\sqrt{\frac{\sum \left(x_{1i}-\frac{\overline{X_1}+\overline{X_2}}{2} - \frac{\overline{X_1}-\overline{X_2}}{2}\right)^2 + \left(x_{2j}-\frac{\overline{X_1}+\overline{X_2}}{2} - \frac{\overline{X_2}-\overline{X_1}}{2}\right)^2}{n-1}}\\
+&=\sqrt{\frac{\sum \left(x_{1i}-\overline{X} - \alpha\right)^2 + \left(x_{2j}-\overline{X} + \alpha \right)^2}{n-1}}&\alpha=\frac{\overline{X_1}-\overline{X_2}}{2}\\
+\end{aligned}
+$$
+
+Note that 
+$$
+\begin{aligned}
+(A-B-C)^2 + (D-B+C)^2 &= (A-B)^2 - 2(A-B)(C) + C^2 + (D-B)^2 + 2(D-B)C + C^2\\
+&= (A-B)^2-2AC+2BC+2C^2 + (D-B)^2+2DC-2BC\\
+&= (A-B)^2 + (D-B)^2 + 2(-AC+BC+DC-BC+C^2)\\
+&= (A-B)^2 + (D-B)^2 + 2C(D-A+C)\\
+\end{aligned}
+$$
+
+But... when we sum over everything (I'm surpressing the appropriate indices)
+
+$$
+\begin{aligned}
+\sum D &= n\overline{X_2}\\
+\sum A &= n \overline{X_1}\\
+\sum C &= n \frac{\overline{X_1}-\overline{X_2}}{2}\\
+\end{aligned}
+$$
+I've messed up somewhere.. the expression MUST be symmetric in $\overline{X_1}$ and $\overline{X_2}$.  So if that last $\alpha$ term actually does vanish
+
+
+$$
+\begin{aligned}
+\frac{s_1 + s_2}{2} &=\frac{1}{2}\sqrt{\frac{2n-1}{n-1}s^2}\\
+&=\sqrt{\frac{2n-1}{4n-4}}s\\
+&\approx \frac{1}{\sqrt{2}}s
+\end{aligned}
+$$
+As the block size gets larger and larger $\alpha = \frac{X_1^2-X_2^2}{2}$ should tend to 0
+
+$$
+\begin{aligned}
+\left(\frac{s_1 + s_2}{2}\right)^2 &=\frac{1}{4(n-1)}\sum\left(x_{1i}-\overline{X_1}\right)^2+\sum\left(x_{2j}-\overline{X_2}\right)^2+2\sqrt{\sum\left(x_{1i}-\overline{X_1}\right)^2\sum\left(x_{2j}-\overline{X_2}\right)^2}\\
+&=\frac{1}{4(n-1)}\sum\left(x_{1i}-\overline{X_1}\right)^2+\sum\left(x_{2j}-\overline{X_2}\right)^2\\
+&=\frac{1}{4(n-1)}\sum\left(x_{1i}-\overline{X}+\alpha\right)^2+\sum\left(x_{2j}-\overline{X}-\alpha\right)^2\\
+&=\frac{1}{4(n-1)}\sum\left(x_{1i}-\overline{X}\right)^2+\sum\left(x_{2j}-\overline{X}\right)^2+0\\
+&=\frac{2n-1}{4n-4}s^2\\
+\frac{s_1 + s_2}{2}&\approx\frac{1}{\sqrt{2}}s
+\end{aligned}
+$$
+Perhaps the best way to move forward is to figure out how to build $s$ out of $s_1$ and $s_2$:
+
+$$
+\begin{aligned}
+s_1^2 &= \frac{1}{n-1} \sum \left(x_{1i}-\overline{X_1}\right)^2\\
+s_2^2 &= \frac{1}{n-1} \sum \left(x_{2i}-\overline{X_2}\right)^2\\
+\overline{X} &= \frac{\overline{X_1} + \overline{X_2}}{2}\\
+\alpha &= \frac{\overline{X_1}-\overline{X_2}}{2}\\
+s^2 &= \frac{1}{2n-1}\sum\left(x_k-\overline{X}\right)^2\\
+s_1^2 + s_2^2&=\frac{1}{n-1}\left(\sum \left(x_{1i}-\overline{X_1}\right)^2 + \sum \left(x_{2j}-\overline{X_2}\right)^2\right)\\
+&=\frac{1}{n-1}\left(\sum \left(x_{1i}-\overline{X_1}\right)^2 + \sum \left(x_{2j}-\overline{X_2}\right)^2\right)\\
+
+\end{aligned}
+$$
+
+It turns out that
+
+$$
+\textrm{SD}(s) = \sigma\sqrt{1-\frac{2}{n-1}\frac{\Gamma(n/2)^2}{\Gamma(n/2-1/2)^2}}
+$$
+
+Clearly the $\frac{2}{n-1}\frac{\Gamma(n/2)^2}{\Gamma(n/2-1/2)^2}$ term must go to 1 (and it does).  So the entire rooted expression should tell us the PERCENTAGE of the standard deviation.
+
+In our uniform monte carlo example, we know that $\sigma < 1$ so we can just solve for $0.01$ and $0.001$... Or that's what I'd like to do... but I need to set up the function a bit more intelligently.  Unfortunately `gamma()` **is** the analytic continuation of the factorial function... so it goes very quickly... too quickly for the `double` data type.  So we'll use the log-gamma function, `lgamma()`, instead
+
+```{r}
+f=function(x){
+  sqrt(1-gamma(x/2)^2/gamma(x/2-0.5)^2/(x-1)*2)
+} # doesn't work
+
+f=function(x){
+  sqrt(1-2/(x-1)*exp(2*lgamma(x/2)-2*lgamma(x/2-1/2)))
+} 
+
+curve(f(x),1000,5000,ylim=c(0,0.001))
+```
+
+Playing around with the various value swe start to see instabilities when the input becomes too large.  We are okay if we look for an output of 0.001.  So that's what we'll use.  550,000 is reasonably close.
+So

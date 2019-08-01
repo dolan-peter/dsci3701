@@ -27,18 +27,26 @@ TRAINING SET
 VALIDATION SET
 SUPERVISED LEARNING
 UNSUPERVISED LEARNING
-BAGGING
+BAGGING (BOOTSTRAP AGGREGATING)
 CALSSIFICATION 
 AGGREGATION LEARNING
 WEAK LEARNERS
 OOB error: Out of bag error (https://en.wikipedia.org/wiki/Out-of-bag_error)
 BOOTSTRAPPING
-BOOSTING
+BOOSTING (ESPECIALLY GRADIENT BOOSTING)
 hyperparameters
+GRADIENT DESCENT
+REGULARIZATION(L1, L2, SPARSE REPRESENTATION)
 
 
 PACKAGES:
 gbm (potentially) Generalized Boosted regression models
+
+library(rsample)      # data splitting 
+library(randomForest) # basic implementation
+library(ranger)       # a faster implementation of randomForest
+library(caret)        # an aggregator package for performing many machine learning models
+library(h2o)          # an extremely fast java-based platform
 
 ### Exercise 
 
@@ -50,7 +58,14 @@ Write the R code required to add two plus two:
 
 ```
 
-### Exercise with Code
+### k-fold cross validation
+
+Before fitting a model (regression, regressoin/classification tree, neural net, whatever).  Break the data into $k$ pieces.  For each piece LEAVE IT OUT and perform the modeling.  See how good of a job the model does on the omitted data.  Do this for all $k$ pieces.  This provides a measure for how good of a job the model is doing.  The PRESS statistics and $p^2$ statistic are, essentially a form of 1-fold cross validation.
+
+
+[This article](https://machinelearningmastery.com/k-fold-cross-validation/) has a good in-depth dicussion of the idea
+
+##
 
 *Here's an exercise with some prepopulated code as well as `exercise.lines = 5` to provide a bit more initial room to work.*
 

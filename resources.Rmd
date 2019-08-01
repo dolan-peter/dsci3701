@@ -10,3 +10,12 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 RMarkdown: https://bookdown.org/yihui/rmarkdown/notebook.html
+
+Raw grid manipulation: https://journal.r-project.org/archive/2009-1/RJournal_2009-1_Murrell.pdf
+
+```{r}
+library(grid)
+bob=viewport(width=1)
+pushViewport(bob)
+grid.circle(0.5,0.5,0.4)
+```

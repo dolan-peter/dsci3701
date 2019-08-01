@@ -668,3 +668,7 @@ modeling
 discuss different meanings of `.`
 
 http://cs231n.github.io/python-numpy-tutorial/
+
+## Formatted output
+
+The programming langauge C had a library function known as `printf()` which was used to produced **formatted output** (typically to the standard output)

@@ -1,0 +1,38 @@
+---
+title: "Tutorial"
+output: learnr::tutorial
+runtime: shiny_prerendered
+---
+
+```{r setup, include=FALSE}
+library(learnr)
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+
+## Terminal
+
+Opening a terminal in RStudio
+
+Opening a terminal in Jupyter Notebook
+
+Hae them download https://archive.ics.uci.edu/ml/machine-learning-databases/iris/iris.data into their Jupyter notebook
+
+## Useful abstractions
+
+In Linux, there are certain abstractions that have been made to allow a unified and intuitive approach to producing desired outcomes.  
+
+We will examine
+
+* Files
+* Sockets
+
+## Files
+
+You have been using files for a long time.  Every word processing document that you save to your computer is saved as a file.  Underneath the hood there is a bit-pattern somewhere that corresponds to your file.
+
+For **text files** the idea is that a file is a sequence of **lines**.  Each line is separated by a character (or set of characters).  In Unix, this is usually the **newline** character, frequently represented as `\n`.  On older DOS and Windows machine the most common end-of-line sequences was `\r\n` (carriage return and newline.)  
+
+## Standard Input
+
+

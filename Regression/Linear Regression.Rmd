@@ -239,6 +239,85 @@ This is useful, but complicates interpretation.
 The **linear** in linear regression refers to the relationship between  explanatory variables.  The variables, themselves, can be the result of non-linear processes.  A simple example would be to fit a quadratic curve.  **Dummy Variables** are another good example
 
 EXPAND
+### Measuring model fit
+
+We have already seen that the line of best fit in Ordinarly Least Squares regression is the one that minimizes the Sum of Squares of the error.  Dividing this value by the number of observarionts $n$ for the model results in the MSE (Mean Sum of squares of error), which is, essentially, the variance of the error terms.  Also note that minimizes SSE also minimizes MSE (and vice versa).  It is related to the $r^2$ statistic.
+
+$$
+\begin{aligned}
+r^2 &= 1 - \frac{\sum (y_i-\widehat{y_i})^2}{\sum{(y_i-\overline{y})^2}}\\
+&=\frac{\sum{(y_i-\overline{y})}^2}{\sum{(y_i-\overline{y})}^2}- \frac{\sum (y_i-\widehat{y_i})^2}{\sum{(y_i-\overline{y})^2}}\\
+&=\frac{\sum(y_i-\overline{y})^2-\sum (y_i-\widehat{y_i})^2}{\sum{(y_i-\overline{y})^2}}\\
+\end{aligned}
+$$
+Notice that all the summations are just a factor of $\frac{1}{n-1}$ away from being sample variance equations.
+
+Recall that if the errors are independent of the model:
+
+$$
+\begin{aligned}
+\textrm{OBSERVED} &= \textrm{FIT} + \textrm{ERROR}\\
+\textrm{VAR(OBSERVED)} &= \textrm{VAR(FIT)}+ \textrm{VAR(ERROR)}
+\end{aligned}
+$$
+
+Notice further that:
+
+$$
+\textrm{VAR(FIT)} = \textrm{VAR(OBSERVED)}- \textrm{VAR(ERROR)}
+$$
+
+So that expression for $r^2$ when algebraically manipulated into the form of a single fraction ends up being:
+
+$$
+
+r^2 = \frac{\textrm{VAR(FIT)}}{\textrm{VAR(OBSERVED)}}
+$$
+In other words... $r^2$ really is the proportion of the variance in y (the $\textrm{OBSERVED}$ thta comes from the model $\textrm{VAR(FIT)}$)
+
+We all recall that $r^2$ is a number that ranges from 0 to 1 and is **also** a good way of thinking about how close the data is to being on a straight line.
+
+Also notice that under this defintiion it really does not matter how many explanatory variables are in the model.
+
+R uses an **adjusted** $r^2$ to penalize a model with more parameters.
+
+This adjusted-$r^2$ is one measure of whether or not a linear model is a good fit for the data.
+
+We could also write the equation for $r^2$ as
+
+$$
+\begin{aligned}
+r^2 &= \frac{\sum(y_i-\widehat{y_i})^2}{\sum(y_i-\overline{y})^2}\\
+&=\frac{\textrm{Sum of Squares of Residuals}}{\textrm{Sum of Squares of Observations}}
+\end{aligned}
+$$
+
+The R package `qpcr` has a useful variant of MSE called **Allen's PRESS** (Predicted Sum of Squares) and a varient of $r^2$ called  **p square**.  The idea for PRESS is to leave out each row in the table, use the remaining data to generate a model, then predict the response value for the omitted row.  The closer this value is to 0 ,the more internally consistent the data is with the model being employed.
+
+The PRESS statistic, clearly depends rather strongly on the number of observations... we can standardize this value in a fashion that is similar to what we did for $r^2$.
+
+Let $\widehat{y_i}$ be the predicted value for the $i$th observation and $y_i$ the true value.  If we let $\epsilon_i = y_i - \widehat{y_i}$ then, in analogy to $r^2$:
+
+$$
+p^2 = \frac{\sum\epsilon_i^2}{\sum(y_i-\overline{y})^2}
+$$
+
+https://www.bmc.com/blogs/mean-squared-error-r2-and-variance-in-regression-analysis/
+
+Recall from earlier our linear model of air quality.  The `PRESS()` function that will calculate p-square does not seem to deal well with `NA`s so we'll want to remove them:
+
+```{r}
+library(qpcR)
+reduced.air.quality=airquality[!is.na(airquality$Ozone),]
+linear.model=lm(data=reduced.air.quality,Ozone~Temp)
+summary(linear.model)
+PRESS(linear.model) #Calculated the p square statistic
+```
+
+The closer to 0 the better this statistic.  Once the `NA`'s are removed the `qpcR` library will allow the PRESS and $p^2$ statistic to be produced for linear models as well as generalized linear models and even regression trees (all of which we will discusss later)
+
+[Here](https://www.analyticbridge.datasciencecentral.com/profiles/blogs/use-press-not-r-squared-to-judge-predictive-power-of-regression) is an interesting, short, article on using the PRESS statistic as a measure of predictive power.  In particular, the example uses several models with similar $r^2$ values but rather different $p^2$ values... 
+
 
 ## Logistic Regression
 
@@ -278,11 +357,9 @@ df <- read.csv("https://stats.idre.ucla.edu/stat/data/binary.csv")
 
 ```
 
-Let me remind you that the goal of regression, as we have been practicing it, is to find the **middle** of the $y$-values that would result... in other words our model should be predicting the *probablility*.  If all our model assumptions are satisfied the curve of best fit for this prediction is a logistic curve.
+Let me remind you that the goal of regression, as we have been practicing it, is to find the **middle** of the $y$-values that would result... in other words our model should be predicting the *probablility* (for the given combination of explanatory values).  If all our model assumptions are satisfied the curve of best fit for this prediction is a logistic curve.
 
 Our data has three explanatory variables and yes/no response.
-
-
 
 We use the `glm()` function and must specify the keyword argument `family="binomial"'.  The resulting parameters tell us something about how the explanatory variables modify the "log odds".
 
@@ -669,8 +746,60 @@ The second step is to **trim** the tree.  The `rpart` function does some of this
 
 Read [this DZone article on decision trees](https://dzone.com/articles/how-to-create-a-perfect-decision-tree)
 
-**Exercise:** Now read [this article](http://uc-r.github.io/regression_trees) and reproduce their code (no copy-pasting allowed!) which discusses using regression trees to categorize more than just a binary response.  It's the same basic idea, but the prediction is for more than just 0 or 1.  Notice that the `rpart()` function is using `method="anova"` rather than `method="class"`
+There are a number of decisions to make about both what the model is saying, as well as how good of a job it is doing.
 
+function                         |   explanation
+---------------------------------|-------------
+`rpart(...,method="class")`      | Build the classification tree.  Uses conventions similar to `lm()`
+`prp(tree)`                      | Makes a graph of tree (from `rpart.plot` package)
+`summary(tree)`                    | Shows the rules, the call, the printcp table, and variable importance.
+`plotcp(tree)`                      | Produce the complexity plot-
+`printcp(tree)                      | table of the complexity plot
+`print(tree)`                       | essentially sumary
+`PRESS(tree)`                       |should work but doesn't                       
+`prune(tree)`                       | prune the tree   
+
+In general, we assess by making a confusion matrix via `predict()` and `table()`.  More particularly, `rpart` performs cross-validation and this information is accessed graphically via `plotcp()` and in table form as `printcp()`.  It is also included in `summary()`
+
+```
+The x-error is the cross-validation error (rpart has built-in cross validation). You use the 3 columns, rel_error, xerror and xstd together to help you choose where to prune the tree.
+
+Each row represents a different height of the tree. In general, more levels in the tree mean that it has lower classification error on the training. However, you run the risk of overfitting. Often, the cross-validation error will actually grow as the tree gets more levels (at least, after the 'optimal' level).
+
+A rule of thumb is to choose the lowest level where the rel_error + xstd < xerror.
+
+If you run plotcp on your output it will also show you the optimal place to prune the tree.
+```
+From https://stackoverflow.com/questions/29197213/what-is-the-difference-between-rel-error-and-x-error-in-a-rpart-decision-tree?rq=1
+
+```
+5
+
+I would like to add some info to @Harold Ship's answer. Actually, there are three ways to select the optimal cp value for pruning:
+
+Use the first level (i.e. least nsplit) with minimum xerror. The first level only kicks in when there are multiple level having same, minimum xerror. This is the most common used method.
+
+Use the first level where xerror falls into the ±1 xstd range of min(xerror), i.e., xerror < min(xerror) + xstd, the level whose xerror is at or below horizontal line. This method takes into account the variability of xerror resulting from cross-validation.
+
+Note: rel_error should NOT be used in pruning.
+
+(A rarely used method) Use the first level where xerror ± xstd overlaps with min(xerror) ± xstd. i.e., the level whose lower limit is at or below horizontal line.
+```
+
+**Exercise:** Now read [this article](http://uc-r.github.io/regression_trees) and reproduce their code (no copy-pasting allowed!) which discusses using regression trees to categorize more than just a binary response.  It's the same basic idea, but the prediction is for more than just 0 or 1.  Notice that the `rpart()` function is using `method="anova"` rather than `method="class"`.
+
+Pay special attention to the discussion around 
+
+* The PRESS Statistic
+* Relative Error
+* Cross-Validation X error
+
+`plotcp(model)`, `printcp(model)`
+
+DEFINE:
+CROSS-VALIDATION ERROR
+PRESS STATISTIC
+MSE
 ```{r regression-exercise-external exercise}
 library(rsample)
 library(dplyr)
@@ -690,7 +819,10 @@ m1 <- rpart(
   method ="anova"
 )
 
+rpart.plot(m1) #plot the tree
+plotcp(m1)     #plot complexity parameter table
 ```
+
 ## Random Forests
 
 This is a pretty small data set.  When the data set is larger there may be conflicting choices, more noise, and other issues that make producing the optimal decision tree problematic.  One approach is to pick a random subset of the data (rows **and** columns) and build a tree from that subset.  Repeat this process many, many times.  The rows are selected **with replacement** (This is known as **bootstrapping**).  
@@ -710,7 +842,7 @@ library(h2o)          # an extremely fast java-based platform
 library(AmesHousing)
 set.seed(123)
 ames_split<-initial_split(AmesHousing::make_ames(),prop=0.7)
-ames_train <- training(amess_split)
+ames_train <- training(ames_split)
 
 ```
 
@@ -774,6 +906,8 @@ quiz(
   )
 )
 ```
+
+
 ## Non parameteric regression
 
 (Borrowing heavily from Chapter 18 of John Fox's Applied Regression Analysis and Generalized Liner Models)
