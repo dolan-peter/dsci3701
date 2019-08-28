@@ -1,0 +1,85 @@
+---
+title: "Week One"
+author: "Peter Dolan"
+date: "8/28/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Welcome Back
+
+This week, in class,  we will go over
+
+* The syllabus
+* Terminal Basics
+   * Terminal emulation
+   * From RStudio
+   * From Jupyter
+   * From a computer
+   * via `ssh`
+* Directory Structures
+   * File System as tree
+   * Working Directory
+   * Paths
+       * Relative path
+       * Absolute paths
+       * Shortcuts `~` and specials `.`, `..`
+    * Files
+       * File Privileges
+          * read
+          * write
+          * execute
+       *Privilege holders
+          * Owner
+          * Group
+          * Users (everybody else)
+* Linux commands
+   * Search Path (and the need for `./`)
+   * `/usr/bin` (as an example of a place where commands live)
+   * command arguments (aka parameters)
+   * command flags
+   * `man` pages
+   * Examples
+      * file/directory stuff
+          * `pwd`
+          * `ls`
+          * `ls <filename>`
+          * `ls -l`
+          * `cd`
+      * file contents
+          * cat
+          * head
+          * tail
+      * editing a file
+          * vim (find a good vim tutorial)
+          
+    
+* Network Overview
+  * Topology
+     * nodes
+        * client
+        * server
+     * layer model (cheaing a bit here)
+        * physical
+        * data link
+        * network
+        * session vs stream
+    * protocol
+        * TCP/IP v4 vs v6
+    * node names
+        * IP address
+        * DNS name
+  * firewall
+  * ssh
+* GIT (with tutorial)
+  * `www.git.com`
+  * `git.umn.edu` (our local github server)
+  * Repository
+     * cloning
+     * pushing
+     * pulling
+  * git and rstudio projects.
+

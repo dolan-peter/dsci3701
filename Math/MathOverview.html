@@ -469,19 +469,19 @@ some.date</code></pre>
 </ul>
 <p>We can use the Python-function <code>type()</code> to get the Python data type:</p>
 <pre class="python"><code>type(1337)</code></pre>
-<pre><code>## &lt;type 'int'&gt;</code></pre>
+<pre><code>## &lt;class &#39;int&#39;&gt;</code></pre>
 <pre class="python"><code>type(True)</code></pre>
-<pre><code>## &lt;type 'bool'&gt;</code></pre>
+<pre><code>## &lt;class &#39;bool&#39;&gt;</code></pre>
 <pre class="python"><code>type(13.37)</code></pre>
-<pre><code>## &lt;type 'float'&gt;</code></pre>
+<pre><code>## &lt;class &#39;float&#39;&gt;</code></pre>
 <pre class="python"><code>type(&quot;stuff&quot;)</code></pre>
-<pre><code>## &lt;type 'str'&gt;</code></pre>
+<pre><code>## &lt;class &#39;str&#39;&gt;</code></pre>
 <pre class="python"><code>type([1,2,3])</code></pre>
-<pre><code>## &lt;type 'list'&gt;</code></pre>
-<pre class="python"><code>type({'key':'value'})</code></pre>
-<pre><code>## &lt;type 'dict'&gt;</code></pre>
+<pre><code>## &lt;class &#39;list&#39;&gt;</code></pre>
+<pre class="python"><code>type({&#39;key&#39;:&#39;value&#39;})</code></pre>
+<pre><code>## &lt;class &#39;dict&#39;&gt;</code></pre>
 <pre class="python"><code>type({1,2,3})</code></pre>
-<pre><code>## &lt;type 'set'&gt;</code></pre>
+<pre><code>## &lt;class &#39;set&#39;&gt;</code></pre>
 </div>
 <div id="the-math" class="section level1">
 <h1>The math</h1>
@@ -546,6 +546,12 @@ vectorOne+vectorTwo</code></pre>
 </div>
 <div id="the-mathematical-details" class="section level2">
 <h2>The mathematical details</h2>
+<p><span class="math display">\[
+\begin{aligned}
+\textrm{Average Rate of Change} &amp;= \frac{f(x+h) - f(x)}{(x+h)-x}\\
+&amp;=\frac{f(x+h) - f(x)}{h}\\
+\end{aligned}
+\]</span> IN other words it is the <strong>change in y</strong> over the <strong>change in x</strong>. This is also known as the <strong>slope</strong> of a line. You can see</p>
 </div>
 </div>
 <div class="footnotes">

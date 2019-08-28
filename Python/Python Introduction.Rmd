@@ -322,8 +322,7 @@ array=[10,20,19,48,27,13]
 array[2]
 array[-1]
 array[2:3]
-array[c(2,2,1,1,2:4,4:2)]
-
+#array[c(2,2,1,1,2:4,4:2)]
 ```
 
 In Python `array=10,20,19,48,27,13` is syntactically correct, but it generates a *tuple* and **not** a *list*.

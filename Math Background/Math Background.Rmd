@@ -380,7 +380,7 @@ Points:
 
 You will find that R has a **matrix multiplication** operation `%*%`.
 
-```{r matrix-1 exercise}
+```{r matrix-1, exercise=TRUE}
 ```
 
 Now read [B.1.3](https://socialsciences.mcmaster.ca/jfox/Books/Applied-Regression-2E/Appendices.pdf)
@@ -1993,3 +1993,226 @@ It's not as confusing as you might think.  For example the set $(1,0,0),(0,1,0)$
 The set of all linear combinations (in the seconds sense of the word) is called the **span** of a set of vectors.
 
 If a linearly indpendent set of vectors spans a set, the vectors are also known as a **basis**.  Every element in the set can be uniquely written as the lienar combination of the basis.
+
+## Graphs
+
+In more advanced mathematics a **graph** is a collection of **vertices** (or **nodes**) and **edges** that connect them.
+
+Here is a simple example:
+
+TIKZexample
+
+In a **directed graph** the edges have a natural direction.  In an **undirected graph** there is no sense of direction.
+
+Graphs can be represented visually as circles (the nodes) connected with either arrows (for a directed graph) or line segments (For an undirected graph).
+
+In most applications **parallel edges** between the same two nodes are not allowed.  In a directed graph two edges are not parallel unless they also share the same direction, so 
+
+$(\textrm{A})\rightarrow(\textrm{B})$ and $(\textrm{A})\leftarrow(\textrm{B})$
+
+is legal.
+
+A **loop** is an edge joining a vertex to itself.  These are also usually not allowed.
+
+The original idea of a graph arose from the HERTZOG BRIDGE problem, and the edge was used to represent a path between the two sections of the park.  The paths were not one-way so this was an undirected graph.
+
+As the idea developed it became useful to associate **weights** to edges or to vertices (usually to edges).  The weight might represent the **cost** or **distance** of a trip (or some more abstract variant of the same.)
+
+A **subgraph** of a graph is a collection of that graph's vertices and edges-- usually with at least a few left out.  
+
+A **complete graph** (undirected) of order $n$ has $n$ vertices, all of which are directly connected to each other.
+
+When a complete graph of order $k$ is a subgraph of a larger graph, it is known as a **clique**.  For $k=2$ all the 2-cliques correspond to the edges of the graph (the edge and the two vertices that it connects.)
+
+Given any two vertices we can consider a sequence of edges (if any) between those two vertices.  This is known as a **path**.  If there is a path leading from one vertex back to itself then that path is known as a **cycle**.
+
+Graphs are frequently used to encode information about **relationships** between objects and one particularly interesting form of relationship that they encode is a **dependence structurre** amongst variables.
+
+Under this idea each variable has an associated node, and variables that are **not** indpendent have an edge connecting them.  
+
+With vertices it is more common to associate a *color* to them.  This gives rise to a number of interesting mathematical properties of a graph.  For example, what is the fewest number of colors that can be used to color a graph such that no two vertices with the same color are connected.
+
+One special case of this situation is a **bipartite graph** which can be colored with two colors alone.
+
+Directed graphs with weighted edges can be encoded as a square matrix where the entries in the matrix correspond to the weight of the edges. We assign to each vertex an index and let the rows of the matrix recommend the **source** of an edge and the col represent the **target**.  Under this convention, the row (say row $i$) and the column (say col $j$) correspond to the edge (if any) between node $i$ and node $j$.  A value of 0 denotes no connection between the two nodes.
+
+There are some really cool consequences to this style of encoding.  First-- we can, clearly, read the weight of the edges between two nodes directly off the matrix.  This is known as the **adjacency matrix** of the graph.  (For unweighted graphs we can use 0 and 1 to denote edge/not-edge)
+
+Let's suppose our matrix is called $A$, then the entries of the matrix $A^2$ (formed via matrix multiplication of the matrix $A$ with itself).  Show the sum of the cost of the sum of **all** paths of length two between the corresponding matrices.
+
+This is interesting because (when weights are non-negative) it allows us to easily detect when two vertices are **2-reachable** (if the number is 0 there is no path of length 2 between the two )
+
+The sort of neat thing about all of this is that **any** square matrix can be considered to be an adjacency matrix-- and the properties of the graph it describes tells us something about the linear transformation encoded by the matrix.
+
+
+
+EXAMPLE
+
+SHOW EXAMPLE
+
+## More stuff with the derivative
+
+One of the more useful thing about calculating derivatives arises for functions that are built out of simpler functions using operations like 
+
+* addition/subtraction
+* multiplication/division
+* composition
+
+For example.  If the following is true:
+
+$$
+f(x) = g(x) + h(x)
+$$
+Then the function $f(x)$ is built out of $g(x)$ and $h(x)$ combined with addition.  It turns out that the **derivative** of $f(x)$ is built out of the derivatives of $g(x)$ and $h(x)$ in the same fashion
+
+$$
+f'(x) = g'(x) + h'(x)
+$$
+
+If we think of $f(x)$ as specificying the position for some object at location $x$ then $f'(x)$ is the speed of that object at location $x$.
+
+So the **speed of $f(x)$** is the speed of $g(x)$ plus the speed of $h(x)$.  In other words **derivatives are additive**.
+
+It's not quite as simple as the for products... but we can get a bit of a sense for what's going on with a picture:
+
+```{r}
+library(grid)
+vp<-viewport()
+j=c("left","bottom")
+w=0.75
+h=0.75
+delta=0.1
+my.rect<-rectGrob(x=0.1,y=0.1,width=w,height=h,just = j,vp=vp,gp=gpar(fill="transparent"))
+my.rect2<-rectGrob(x=0.1,y=0.1+h-delta,width=w-delta,height=delta,just=j,vp=vp,gp = gpar(lty = "dashed",fill="gray90",alpha=0.4))
+my.rect3<-rectGrob(x=0.1+w-delta,y=0.1,width=delta,height=h-delta,just=j,vp=vp,gp = gpar(lty = "dashed",fill="gray90",alpha=0.4))
+
+my.rect4<-rectGrob(x=0.1+w-delta,y=0.1+h-delta,width=delta,height=delta,just=j,vp=vp,gp = gpar(lty = "dashed",fill="gray70",alpha=0.4))
+
+grid.draw(my.rect2)
+grid.draw(my.rect3)
+grid.draw(my.rect4)
+grid.draw(my.rect)
+```
+
+THink about the interior, rectange with white background and think of that as being $f(x)g(x)$.  As $x$ changes, $f(x)$ (the width) changes and so does $g(x)$ the height.  
+
+You can think of the derivative as the instantaneous rate of change.  But we **approximate** this by making small changes in $x$ (which we call $\Delta x$) look at the result and take the ratio of the change in $y$ and the change in $x$:  $\frac{f(x+\Delta x)}{\Delta x}$.  This is the **approximate change**.  But if consider the ratio as $\Delta x$ goes to 0 (gets really small) we get increasingly accurate approximations.
+
+So consider this picture:
+
+```{r}
+library(grid)
+vp<-viewport()
+j=c("left","bottom")
+w=0.75
+h=0.75
+delta=0.1
+my.rect<-rectGrob(x=0.1,y=0.1,width=w,height=h,just = j,vp=vp,gp=gpar(fill="transparent"))
+my.rect2<-rectGrob(x=0.1,y=0.1+h-delta,width=w-delta,height=delta,just=j,vp=vp,gp = gpar(lty = "dashed",fill="gray90",alpha=0.4))
+my.rect3<-rectGrob(x=0.1+w-delta,y=0.1,width=delta,height=h-delta,just=j,vp=vp,gp = gpar(lty = "dashed",fill="gray90",alpha=0.4))
+
+my.rect4<-rectGrob(x=0.1+w-delta,y=0.1+h-delta,width=delta,height=delta,just=j,vp=vp,gp = gpar(lty = "dashed",fill="gray70",alpha=0.4))
+
+grid.draw(my.rect2)
+#grid.draw(my.rect3)
+grid.draw(my.rect4)
+#grid.draw(my.rect)
+```
+
+The width of the entire section is $f(x+\Delta x)$.  The first section is $f(x)$.  So the width of the darkest region is an approximation to $f(x+\Delta x)-f(x)\approx f'(x) \Delta x$
+#4 6 18 19 23
+
+We would measure the value of $f(x)g(x)$ by the number of unit squares that it encompasses and so to measure the rate of change we need to measure how the squares change.  If $g(x)$ were constant than we would go from $f(x)$ to $f(x) + \Delta x$.  And the change would then be the rightmost shaded rectangle which is approximately $g(x)f'(x) \Delta x$.  If only $g(x)$ were to change then $g'(x)f(x)\Delta x$ would be the upper rectangle area.  The littel tiny square in the right corner is then approximately $f'(x)g'(x) (\Delta x)^2$  To figure out the **overall** (approximate) rate of change we then divide by $\Delta x$.  
+
+So, in the limit:
+
+$$
+\left[f(x)g(x)\right]'=f'(x)g(x) + f(x)g'(x)
+$$
+Now the most interesting one is what happens when we compose $f(g(x))-f(g(x+\Delta x))$.  Try to think about what that would mean.
+
+As $x$ is changing this induces a change in $g(x)$ which, in turn, induces a change in $f(x)$.  Let's start by considering some of the easiest functions possible-- linear ones:
+
+$$
+\begin{aligned}
+f(x) &= ax + b\\
+g(x) &= cx + d\\
+f(g(x))&= a(g(x))+b\\
+&= a(cx+d) + b\\
+&= acx + ad + b
+\end{aligned}
+$$
+The rate of change here is $ac$.  Notice this is the rate of change of $f(x)$ times the rate of change of $g(x)$... Even though for these simle functions the rate of change is the same for every value of $x$, if we are very clever we might notice that we care about the rate of change of $f$ and $g(x)$.  So, it's more accurate to write:  $f'(g(x))g'(x)$.
+
+The **magic** of derivatives is that they make everything look linear (at least locally).  So the rule is the same:
+
+$$
+[f(g(x))]' = f'(g(x))g'(x)
+$$
+
+The speed of the composition is the speed of g at $x$ **times** the speed of $f$ at $g(x)$.
+
+We can see this to some extent 
+
+```{r, echo=FALSE}
+sliderInput("x", "Value of x", min = 0, max = 1.2, value = 0,step=0.05,animate=list(interval=200,loop=TRUE))
+plotOutput("animPlot",height="600px",width="600px")
+```
+
+```{r context="server"}
+output$animPlot=renderPlot({
+  oldPar=par(mfrow=c(1,2))
+  f=function(x){
+    #5*(x)*(x-0.5)*(x-1)
+    5*(x^3-1.5*x^2+0.5*x)
+  }
+  f.prime=function(x){
+    5*(3*x^2-3*x+0.5)
+  }
+  g=function(x){
+    #2*(x-0.25)*(x+0.25)
+    2*(x^2-0.0625)
+  }
+  g.prime=function(X){
+    4*X
+  }
+  pt.slope=function(p.x,p.y,m){
+    slope=m
+    intercept=-p.x*m+p.y
+    abline(intercept,slope,lty=2,col="darkgray")
+    text(p.x,p.y,round(slope,1),pos=3,offset=-1)
+  }
+  x=input$x
+  curve(f(x),-0.25,1.25,ylab="f(x)")
+  abline(h=-1,col="lightgray")
+  abline(v=-0.25,col="lightgray")
+  pt.slope(x,f(x),f.prime(x))
+  points(x,f(x),cex=2,pch=20)
+  points(x,-1,cex=2,pch=20,col="lightgray")
+  points(-0.25,f(x),cex=2,pch=20,col="lightgray")
+  curve(g(x),-1,1,ylab="g(f(x))",ylim=c(-0.5,2))
+  abline(h=-0.5,col="lightgray")
+  abline(v=-1,col="lightgray")
+  pt.slope(f(x),g(f(x)),g.prime(f(x)))
+  points(f(x),g(f(x)),cex=2,pch=20)
+  points(f(x),-0.5,cex=2,pch=20,col="lightgray")
+  points(-1,f(x),cex=2,pch=20,col="lightgray")
+  text(-0.75,-0.4,"-f(x)-")
+  text(0,2,paste("speed of composition: ",round(f.prime(x)*g.prime(f(x)),1)))
+  par(oldPar)
+})
+```
+
+There are a lot of moving parts (ha!) in this diagram, so be sure to trace them all.  The left panel shows $x$, $f(x)$ and the relationship between the speed of $x$ and the speed of $f(x)$ (as recorded by $f'(x)$ and graphically represented by the **slope** of the dotted line).  Watch how the horizontally moving gray dot and the vertically moving gray dot are connected by the graph of $f(x)$.  The dot on the horizontal line is the value of $x$, it should be changing at a constant rate.  The dot on the vertical line is value of $f(x)$, it's rate of change will depend upon the graph of $f(x)$.  Notice that when the slope of the **tangent line** is negative, the dot on the vertical line is going down.  When the slope of the tangent line is positive, the dot on the vertical line is going up.
+
+Further notice that the $x$ and $y$ limits on the graph are not identical... so the exact value of the slope is a bit hard to eyeball-- you really do need to think about the equation $$\textrm{slope}=\frac{\textrm{rise}}{\textrm{run}}$$
+in order to calculate the exact value.  Regardless, positive slopes and negative slopes are unaffectd by this x-scale vs y-scale issue.
+
+When we **compose** two functions, we plug the output of one function into the input of the other.  Notice that the value of the point on the second horizontal line is precisely the same as the value of the point on the **vertical line** in the first panel.  Therefore the speed at which the first vertical point is moving is the same as the speed of the second horizontal point (with scale issues somewhat obscuring this fact)
+
+The vertical line on the right panel is the composition $g(f(x))$.  It's exact instantaneous velocity is indicated on the right panel.  Try pausing the animation and looking at a few values of $x$.  Make sure the relationship makes sense... then just let the animation loop and soak it in for a bit.
+
+Finally, notice that the velocity of the composition is determined by the multiplication of the slopes of the two dotted lines.  These slopes are the velocity of $f(x)$ at $x$ and the velocity of $g(x)$ **at** $f(x)$.  Read that last sentence a few times... I used $g(x)$ on purpose (although the distinction between $g(x)$ and $f(x)$ in that final clause requires some careful thought.)
+
+Let's just say it one more way... *IF*,at a particular input, $g(x)$ produces a velocity that is $3$ times that of the velocity of the input.  Then if the velocity at which the input is changing is 2, the total velocity would be 3*2=6.   Now... if we patch the output of $f(x)$ into the input of $g(x)$
+

@@ -57,7 +57,8 @@ Requirement| Condition
 ```{r datatypes-check}
 
 ```
-```{r datatypes, exercise=TRUE, exercise.setup="datatypesetup",exercise.checker=}
+
+```{r datatypes, exercise=TRUE, exercise.setup="datatypesetup"}
 num.1 <- 2
 num.2 <- 3
 sum <-  # Add code to the left of this comment

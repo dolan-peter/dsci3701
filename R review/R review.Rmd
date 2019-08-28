@@ -225,7 +225,7 @@ df[order(df$grades),]
 The `order()` function will sort on multiple keys:
 
 ```{r}
-df[order(df$grades,df$numbs),]
+df[order(df$grades,df$nums),]
 ```
 
 **Exercise:**
@@ -256,3 +256,7 @@ There is one further requirement-- the data frame should be ordered by the data 
 ## Topic 1
 
 https://rcompanion.org/handbook/G_03.html
+
+## Tidyverse
+
+**difference between data frame and tibble**

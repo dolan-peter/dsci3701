@@ -1,0 +1,76 @@
+---
+title: "Timing the Cube"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Analysis of Sam's Cube Solving
+
+We wanted to fit a curve to Sam's time for cube solving.  We had data for sides $n=2, 3,$ and $4$:
+
+```{r}
+sides=1:4
+times=c(0.3,9.2,32,200)
+plot(sides,times,main="Sam's time",ylab="time to solve (sec)")
+```
+
+We found a log transform of the time made the data most linear
+
+```{r,echo=FALSE}
+plot(sides,log10(times),main="Sam's time",ylab="log10 time (seconds)")
+```
+
+Making a line of best fit to the transformed data:
+
+```{r,echo=FALSE}
+model1<-lm(log10(times)~sides)
+plot(sides,log10(times),ylab="log10 time (seconds)")
+abline(model1,lty=2,col="red",lwd=3)
+```
+
+The model on the transformed data has the following details:
+
+```{r,echo=FALSE}
+summary(model1)
+```
+
+Let's produce the relationship between $\textrm{sides}$ and $\textrm{time}$.
+```{r,echo=FALSE}
+coefs<-10^coefficients(model1)
+c2<-round(coefs,2)
+```
+
+The model is 
+
+$$\textrm{time} = `r c2[1]`(`r c2[2]`)^\textrm{sides}$$
+
+Fitting this to the original data we get:
+
+```{r,echo=FALSE}
+plot(sides,times,main="Sam's cube time(tm)",cex=2,pch=20,col="skyblue",ylim=c(0,400))
+f=function(p.x){
+  c2[1]*c2[2]^p.x
+}
+lf=function(p.x){ #Assumes model1 is defined
+  coefs<-10^confint(model1)[,1]
+  c3<-round(coefs,2)
+  c2[1]*c3[2]^p.x
+}
+uf=function(p.x){ #Assumes model1 is defined
+  coefs<-10^confint(model1)[,2]
+  c3<-round(coefs,2)
+  c2[1]*c3[2]^p.x
+}
+
+x.seq=seq(1,5,length.out=40)
+ly=lf(x.seq)
+uy=uf(x.seq)
+segments(x.seq,ly,x.seq,uy,col="skyblue")
+curve(lf(x),1,5,lwd=3,lty=2,col="blue",add=TRUE)
+curve(uf(x),1,5,lwd=3,lty=2,col="blue",add=TRUE)
+curve(f(x),1,5,lwd=3,lty=2,col="red",add=TRUE)
+points(sides,times,cex=3,pch=19,col="black")
+```

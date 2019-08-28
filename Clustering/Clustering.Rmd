@@ -57,7 +57,6 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 from sklearn.neighbors import KNeighborsClassifier
 from collections import Counter
-
 # define column names
 names = ['sepal_length', 'sepal_width', 'petal_length', 'petal_width', 'class']
 
@@ -79,9 +78,8 @@ knn.fit(X_train, y_train)
 
 # predict the response
 pred = knn.predict(X_test)
-
 # evaluate accuracy and share results with knitted document
-print accuracy_score(y_test, pred)
+print(accuracy_score(y_test, pred))
 ```
 
 Now we will do the second part of the article, starting with the `train()` function:
@@ -623,7 +621,7 @@ That last one is a bit subtle-- the R objects returned by the R H2o functions ar
 
 Let's apply this to the `iris` data we have been using.  Since the h2o package has a copy of the file (it's popular in machine learning circles) we can use `system.file()` to find the file's location and upload it:
 
-```{r}
+```{r,eval=FALSE}
 
 # Build naive Bayes classifier with numeric predictors
 library(h2o)
@@ -632,7 +630,7 @@ h2o.init() #Start the server if it's not already running
 ```
 
 Now we find the path, upload it, and store the relevant access information in an R object for future interactions with H2o:
-```{r}
+```{r,eval=FALSE}
 df=iris
 
 irisPath = system.file("extdata", "iris.csv", package="h2o")
@@ -663,7 +661,110 @@ Look at the confusion matrix.  Not too shabby is it?  (18+14+16)/(18+14+16+2)=96
 
 You s
 
-Naive Bayes is often used in spam detection.  The idea is that a collection of words is gathered from a large setof emails.  A large table is produced where the value is 0 if the word is missing and a 1 if the word is present.  
+Naive Bayes is often used in spam detection.  To begine the process a training set needs to be procured.  This set is a collection of email--- some legitimate, and some spam.  The **class** of the email is either **spam** or **not spam**.
 
-##Add shorcomings
+Terms (words) are extracted from the emails and for each class of email, and for each term a table is produced detailing the proportion of documents of that class  containing the term.  For example, if there were 120 SPAM messages and 97 of them contained the word `lottery` And in 220 non SPAM messages only 3 of them contained the word `lottery` 
+
+Then the **count table** would look like this:
+
+           | spam    |   not spam
+-----------|---------|------------
+has lottery| 97      | 3
+no lottery | 23      | 217
+ 
+WE can **augment** the table to include row and column totals:
+
+           | spam    |   not spam| total
+-----------|---------|-----------|---------
+has lottery|  97     |   3       | 100
+no lottery |  23     | 217       | 240
+total      | 120     | 220       | 340
+ 
+You might recall that we can calculate **conditional probabilities** from this table:
+
+$$
+\begin{aligned}
+\textrm{P(lottery|spam)}&=\frac{97}{120}\approx0.808\\
+\textrm{P(lottery|not spam)}&=\frac{3}{220}\approx0.136\\
+\textrm{P(spam)}&=\frac{120}{340}\approx0.353\\
+\textrm{P(not spam)}&=\frac{220}{340}\approx0.647\\
+\end{aligned}
+$$
+We can then build similar tables for each term in the emails that we find worthy of inclusion.  Let's streamline our notation about.  We will let $W_i$ denote word (or term) $i$.  In our example $W_1$ means `lottery`.
+
+So let's take a half step back for a second.  In the language of statistics, $W_1$ is an event.  The random process is to randomly select an email.  IF the email contains the 1st word from our list then it is considered to be an element of $W_1$ otherwise it is an element of $W_1^c$.  
+To keep things manageable consider 4 terms only.   Suppose we randomly selected an email and found it contained terms 1 and 3, but not 2 and 4.  Then the email would be in the compund event $W_1 \textrm{ and } W_2^c \textrm{ and } W_3 \textrm{ and } W_4^c$.  In the literature that I'm reviewing I tend to see the following notation being used:
+
+$$
+W_1 \cap \lnot W_2 \cap W_3 \cap \lnot W_4
+$$
+
+But it has the same meaning.
+
+The goal of Naive Bayes, is, therefore to calculate the two conditional probabilities:
+
+$$
+\begin{aligned}
+\textrm{P(spam|}W_1 \cap \lnot W_2 \cap W_3 \cap \lnot W_4)\\
+\textrm{P(}\lnot \textrm{spam|}W_1 \cap \lnot W_2 \cap W_3 \cap \lnot W_4)
+\end{aligned}
+$$
+
+By looking at the terms in a new email.
+
+In general, doing these sorts of calculations are difficult, but Bayes rules provides a first step::
+
+$$
+\begin{aligned}
+\textrm{P(spam|}W_1 \cap \lnot W_2 \cap W_3 \cap \lnot W_4)&=\frac{\textrm{P(} W_1 \cap \lnot W_2 \cap W_3 \cap \lnot W_4|\textrm{spam})} {\textrm{P(}W_1 \cap \lnot W_2 \cap W_3 \cap \lnot W_4)}\\
+\end{aligned}
+$$
+The simplification that makes it all work is the source of the word **naive**.  Despite it clearly being incorrect, we just take all words to be independent.  Then the equation simplifies dramatically:
+
+$$
+\begin{aligned}
+\textrm{P(spam|}W_1 \cap \lnot W_2 \cap W_3 \cap \lnot W_4)&=\frac{\textrm{P(} W_1 \cap \lnot W_2 \cap W_3 \cap \lnot W_4|\textrm{spam})\textrm{P(spam)}} {\textrm{P(}W_1 \cap \lnot W_2 \cap W_3 \cap \lnot W_4)}\\
+&=\frac{\textrm{P(} W_1 | \textrm{spam})\textrm{P(} \lnot W_2 | \textrm{spam})\textrm{P(} W_3 | \textrm{spam})\textrm{P(}\lnot W_4 | \textrm{spam})\textrm{P(spam)}} {\textrm{P(}W_1 \cap \lnot W_2 \cap W_3 \cap \lnot W_4)}\\
+\end{aligned}
+$$
+
+The denominator is the sum of the two numerators.  For reference here is the equation for $\textrm{P}\lnot\textrm{(spam)}$:
+
+$$
+\begin{aligned}
+\textrm{P(}\lnot\textrm{spam|}W_1 \cap \lnot W_2 \cap W_3 \cap \lnot W_4)&=\frac{\textrm{P(} W_1 | \lnot\textrm{spam})\textrm{P(}\lnot W_2 | \lnot\textrm{spam})\textrm{P(} W_3 | \lnot\textrm{spam})\textrm{P(}\lnot W_4 | \textrm{spam})\textrm{P(}\lnot\textrm{spam)}} {\textrm{P(}W_1 \cap \lnot W_2 \cap W_3 \cap \lnot W_4)}\\
+\end{aligned}
+$$
+
+
+So the algorithm becomes as follows
+
+**training:**
+1. Calculate $\textrm{P(spam)}$ and $\textrm{P(}\lnot\textrm{spam)}$ for the training set
+1. Calculate all the simple conditional probabilities for each term (the $W_i$'s) for the training set
+
+For a new email determine which terms it contains. And lookup all the appropriate conditional spam probabilities $\textrm{(}W_i|\textrm{spam})$, $\textrm{(}\lnot W_i|\textrm{spam})$.  Multiply them all together and then mutiply by $\textrm{P(spam)}$.  This is the **spam numerator**.  Let's call it $N_1$
+
+Similarly calculate the **non spam numerator**.  Let's call this $N_2$.
+
+So, using our example
+
+$$
+\begin{aligned}
+\textrm{P(spam|}W_1 \cap \lnot W_2 \cap W_3 \cap \lnot W_4)&=\frac{N_1}{N_1+N_2}\\
+
+\textrm{P(}\lnot\textrm{spam|}W_1 \cap \lnot W_2 \cap W_3 \cap \lnot W_4)&=\frac{N_2}{N_1+N_2}\\
+
+\end{aligned}
+$$
+
+The probabilities determined by this process don't tend to be particularly accurate, but they classification produced tends to work quite well.  FIND REFERENCE
+
+So, in summary, the idea is that a collection of words is gathered from a large set of emails. Simple statistics are generated for each class of email and each term.  Probabilities are assigned according to the previous directions.
+
+##The problem of zero
+
+There is, however, one serious problem with the approach outlined above. What happens when a term does not appear in *any* spam?  The corresponding conditional probability for that term will be 0.  But when we apply naive Bayes and **multiply** any product containing a 0 as a factor BECOMES 0-- with no hope of becoming anything else.  The solution is to use the **Laplace estimator**.  In the count tables we add 1 to every cell (although we do not do this for the calculations of $\textrm{P(spam)}$ or 
+$\textrm{P(}\lnot\textrm{spam)}$.  So, if our conditional probability was $\frac{0}{120}$ it would become $\frac{1}{124}$ (notice that add 1 to every cell will increase the numerator by 1 and the denominator by 4)
+
 
