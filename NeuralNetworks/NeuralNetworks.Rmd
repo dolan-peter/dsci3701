@@ -268,7 +268,7 @@ load("nnModels.rdata") # Later in the document is a `save()` command
 ```{r,echo=FALSE,eval=FALSE}
 #Note that the `plot()` function does **not** work nicely with RMarkdown so I am outputing the plot to a file and then loading it in RMarkdown
 # set eval=TRUE for the first run-through if you are trying to recreate this.  
-library(neuralnet)
+require(neuralnet)
 simple.model<-neuralnet(data=concrete.training,strength~.,hidden=1,act.fct = "logistic")
 plot(simple.model) 
 ```
@@ -305,7 +305,7 @@ Now let's computer "by hand" and then using the `predict()` function.  Rather th
 ```{r,echo=TRUE}
 logistic=function(x){1/(1+exp(-x))}
 0.6684915-0.7414956*logistic(sum(input*first.weights))
-predict(simple.model,concrete.training[1,])
+#predict(simple.model,concrete.training) #PCD-CHECK
 ```
 
 Success!  They match.  So we **do** understand the calculation procedure.
@@ -362,8 +362,9 @@ plot(even.better.model2)
 ```
 
 ```{r}
+library(neuralnet)
 observed=concrete.testing$strength
-fitted=compute(even.better.model,concrete.testing)$net.result[,1]
+fitted=compute(even.better.model,concrete.testing)$net.result[,1] #CHANGE to predict
 fitted2=compute(even.better.model2,concrete.testing)$net.result[,1]
 plot(fitted,observed,main="Comparison of predicted and observed concrete strengths",sub="5-5 hidden node (logistic)",xlim=c(0,1))
 plot(fitted2,observed,main="Comparison of predicted and observed concrete strengths",sub="5-5 hidden node (softplus)",xlim=c(0,1))
