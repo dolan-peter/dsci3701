@@ -92,11 +92,11 @@ column(width=3,
 column(width=3,
   sliderInput("ul", "upper limit", min = 0.5, max = 10, value = 2,step=0.5)))
 sliderInput("n", "Object count", min = 10, max = 1000, value = 100,step=10)
-plotOutput("density",height="800px",width="600px")
+plotOutput("density2",height="700px",width="600px")
 ```
 
 ```{r context="server"}
-output$density=renderPlot({
+output$density2=renderPlot({
   source("make.table.R")
   n=input$n
   ul=input$ul
@@ -105,6 +105,7 @@ output$density=renderPlot({
   t2<-aggregate(c(tmp$count),by=list(c(tmp$index)),sum)
   drop=-1*c(1,nrow(t2))
   x=t2[drop,1]/scale
+  #theta=atan2(t2[drop,1],scale)
   p=t2[drop,2]
   ev=sum(x*p)
   v=sum(p*(x-ev)^2)
@@ -180,3 +181,44 @@ q(R) &= R^nf(R,\frac{1}{R},1)\\
 &=\left(pR^2 + rR + q\right)^n
 \end{aligned}
 $$
+
+## Moving to theta
+
+More useful than the ratio, perhaps, would be the value of THETA (I'll use `atan2()`)
+```{r, echo=FALSE}
+library(shiny)
+fluidRow(
+  column(width=3,
+    sliderInput("p2", "numerator probability", min = 0, max = 1, value = 0.4,step=0.05)),
+column(width=3,
+    sliderInput("q2", "denominator probability", min = 0, max = 1, value = 0.4,step=0.05))
+)
+sliderInput("n2", "Object count", min = 10, max = 1000, value = 100,step=10)
+plotOutput("density",height="700px",width="600px")
+```
+
+```{r context="server"}
+output$density=renderPlot({
+  source("make.table.R")
+  n=input$n2
+  tmp<-make.table(n,input$p2,input$q2)
+  scale=attr(tmp$index,"scale")
+  t2<-aggregate(c(tmp$count),by=list(c(tmp$index)),sum)
+  drop=-1*c(1) #We don't drop INF anymore since it converts to pi/2
+  #x=t2[drop,1]/scale
+  theta=atan2(t2[drop,1],scale)
+  p=t2[drop,2]
+  ev=sum(theta*p) #
+  v=sum(p*(theta-ev)^2)
+  ev.txt=round(ev,3)
+  sd.txt=round(sqrt(v),3)
+  ratio.txt=as.character(round(input$p2/input$q2,3))
+  msg=paste0("EV: ",ev.txt," SD:",sd.txt," ratio: ",ratio.txt)
+  par(mfrow=c(2,1))
+  plot(theta,p,sub=msg,main=paste0("Probability Density n=",input$n2," (",input$p2," , ",input$q2,")"),col=rgb(0,0,0,1/4),pch=".",cex=2)
+  abline(v=input$p2/input$q2)
+  plot(theta,cumsum(p),main="Cumulative Distribution")
+})
+```
+
+Odd note:  There is a "hole" in the cumulative distribution-- this is where the Expected value (after dropping infinity) of the original ratios occurs.  Worth looking into that.  Might be something profound

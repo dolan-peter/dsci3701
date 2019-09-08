@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+
+<meta name="progressive" content="false" />
+<meta name="allow-skip" content="false" />
+
+<title>Tutorial</title>
+
+
+<!-- highlightjs -->
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs && document.readyState && document.readyState === "complete") {
+   window.setTimeout(function() {
+      hljs.initHighlighting();
+   }, 0);
+}
+</script>
+
+
+
+</head>
+
+<body>
+
+
+
+<div class="pageContent band">
+<div class="bandContent page">
+
+<div class="topics">
+
+<div id="section-latex" class="section level2">
+<h2>LaTEX</h2>
+<p>The name of the language most commonly used to generate mathematical equations for publications is known as LaTEX (prounounced La-Tech). Although LaTEX is actually a complete type-setting language, we are mostly going to use it for generating mathematical expressions an special symbols.</p>
+<p>RMarkdown documents (and Markdown cells in Jupyter notebooks) understand Latex. You wil mostly be using</p>
+<ul>
+<li>Math mode</li>
+<li>Display math mode</li>
+</ul>
+<div id="section-math-mode" class="section level3">
+<h3>Math Mode</h3>
+<p>Expression between single dollar signs, <code>$</code> are in math mode. For example:</p>
+<p>Output: <span class="math inline">\(\mu\)</span><br />
+Raw: <code>$\mu$</code></p>
+<p>Most character don’t have special meanings, however <code>_</code> make a subscript <code>^</code> a superscript, and curly braces <code>{</code> and <code>}</code> are used to “group”. So, <span class="math inline">\(x_{12}\)</span> is generated using <code>$x_{12}$.  Whereas</code><span class="math inline">\(x_12\)</span>` generates <span class="math inline">\(x_12\)</span>.</p>
+<p>The backslashe character, <code>\</code> is usually followed by text and the resulting entity may be turned into a special character (as in the case of <code>\mu</code>), or it may indicate a command. For example <code>\frac</code> is a command that expects <strong>two</strong> arguments: The expression <code>\frac 12</code> uses <code>1</code> as the first argument and <code>2</code> as the second: <span class="math inline">\(\frac 12\)</span>. In order to have the argument encompass multiple characters use curly braces: <code>\frac{12}{24} = \frac 12</code> will generate <span class="math inline">\(\frac{12}{24} = \frac 12\)</span>.</p>
+<p>The math mode font is slightly different than the normal text font. Look at the differences between these two threes: 3 versus <span class="math inline">\(3\)</span>. Furthermore, in math mode, most text characters are in italics. The convention is for variables to be in italics but <strong>not</strong> for important functions. Hence use <code>\sin(\theta)</code> instead of <code>sin(\theta)</code> which look like <span class="math inline">\(\sin(\theta)\)</span> vs <span class="math inline">\(sin(\theta)\)</span>.</p>
+<p>The mathmode font can be overridden through the use of <code>\textrm{&lt;stuff&gt;}</code> (for text roman). In my writing I will frequently use expresions like <code>$\textrm{P}(X=k)=\cdots$</code> (which knits into <span class="math inline">\(\textrm{P}(X=k)=\cdots\)</span>)</p>
+</div>
+<div id="section-display-math-mode" class="section level3">
+<h3>Display Math Mode</h3>
+<p>RMarkdown prefers (as evidenced by background highlighting) for the double <code>$</code> construction to look as follows:</p>
+<pre><code>$$
+&lt;stuff&gt;
+$$</code></pre>
+<p>By default display math uses bigger symbols and centers the expression. It is the difference between <span class="math inline">\(\int_2^3 x^3 dx\)</span> and</p>
+<p><span class="math display">\[
+\int_2^3 x^3 dx
+\]</span></p>
+</div>
+</div>
+<div id="section-some-common-latex-expressions" class="section level2">
+<h2>Some common LaTex expressions:</h2>
+<table>
+<colgroup>
+<col width="26%" />
+<col width="38%" />
+<col width="35%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Category</th>
+<th>Example</th>
+<th>Notation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Greek symbols</td>
+<td><span class="math inline">\(\sigma, \mu\)</span></td>
+<td><code>\sigma</code>, <code>\mu</code></td>
+</tr>
+<tr class="even">
+<td>Inequality Symbols</td>
+<td><span class="math inline">\(\ne\ \ge\ \le\)</span></td>
+<td><code>\ne</code>, <code>\ge</code>, <code>\le</code></td>
+</tr>
+<tr class="odd">
+<td>Fractions</td>
+<td><span class="math inline">\(\frac{1}{1+\frac{2}{e}}\)</span></td>
+<td><code>\frac{1}{1+\frac{2}{e}}</code></td>
+</tr>
+<tr class="even">
+<td>Adding a space</td>
+<td>(see net line)</td>
+<td><code>\</code> (backslash followed by a space)</td>
+</tr>
+<tr class="odd">
+<td>Set symbols</td>
+<td><span class="math inline">\(\subset\ \supset\ \subseteq\ \supseteq\\ \in\ \notin\ \cup\ \cap\ \times\ \emptyset\)</span></td>
+<td><code>$\subset\ \supset\ \subseteq\ \supseteq\ \in\ \notin\ \cup\ \cap\ \times\ \emptyset$</code></td>
+</tr>
+<tr class="even">
+<td>Logical Expressions</td>
+<td><span class="math inline">\(\forall\ \exists\ \Rightarrow\ \\\Leftrightarrow\ \wedge\ \vee\)</span></td>
+<td><code>$\forall\ \exists\ \Rightarrow\ \wedge\ \vee$</code></td>
+</tr>
+<tr class="odd">
+<td>sub and super script</td>
+<td><span class="math inline">\(2^{3x}\)</span> and <span class="math inline">\(x_i\)</span></td>
+<td><code>$2^{3x}$</code> <code>$x_i$</code></td>
+</tr>
+<tr class="even">
+<td>Common Functions</td>
+<td><span class="math inline">\(\sin()\ \cos()\ \tan()\ \log()\ \ln()\ \exp()\)</span></td>
+<td><code>\sin()\ \cos()\ \tan()\ \log()\ \ln()\ \exp()</code></td>
+</tr>
+<tr class="odd">
+<td>grouping</td>
+<td><span class="math inline">\(\log\left(\frac{1}{1+\exp(-x)}\right)\)</span></td>
+<td><code>\log\left(\frac{1}{1+\exp(-x)}\right)</code> (note the use of <code>\left(</code> and <code>\right)</code>)</td>
+</tr>
+<tr class="even">
+<td>newlines</td>
+<td>see above</td>
+<td>just use <code>\\</code> at the end of the line</td>
+</tr>
+<tr class="odd">
+<td>roots</td>
+<td><span class="math inline">\(\sqrt{3x}\ \sqrt[3]{2x^2-1}\)</span></td>
+<td><code>\sqrt{3x}\ \sqrt[3]{2x^2-1}</code></td>
+</tr>
+<tr class="even">
+<td>miscelleaneous</td>
+<td><span class="math inline">\(\pm\)</span></td>
+<td><code>\pm</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="section-the-aligned-environment." class="section level2">
+<h2>The <em>aligned</em> environment.</h2>
+<p>This can be used to create nicely formatted sequences of equations. Consider the following <span class="math inline">\(\Longleftrightarrow\)</span></p>
+<p><span class="math display">\[
+\begin{aligned}
+ax^2 + bx + c = 0 &amp;\Longleftrightarrow x^2 + \frac{b}{a}x + \frac{c}{a} = 0\\
+&amp;\Longleftrightarrow x^2 + \frac{b}{a}x + \frac{b^2}{4a^2} - \frac{b^2}{4a^2} + \frac{c}{a} = 0 \\
+&amp;\Longleftrightarrow \left(x + \frac{b}{2a}\right)^2  - \frac{b^2}{4a^2} + \frac{c}{a} = 0 \\
+&amp;\Longleftrightarrow \left(x + \frac{b}{2a}\right)^2  - \frac{b^2}{4a^2} + \frac{c}{a} = 0 \\
+&amp;\Longleftrightarrow \left(x + \frac{b}{2a}\right)^2  - \frac{b^2-4ac}{4a^2} = 0 \\
+&amp;\Longleftrightarrow \left(x + \frac{b}{2a}\right)^2  = \frac{b^2-4ac}{4a^2}  \\
+&amp;\Longleftrightarrow x + \frac{b}{2a}  = \pm \sqrt{\frac{b^2-4ac}{4a^2}}  \\
+&amp;\Longleftrightarrow x = -\frac{b}{2a}\pm\frac{\sqrt{b^2-4ac}}{\sqrt{4a^2}}  \\
+&amp;\Longleftrightarrow x = \frac{-b \pm \sqrt{b^2-4ac}}{2a}  \\
+\end{aligned}
+\]</span></p>
+<p>Which can be generated using the following code:</p>
+<pre><code>$$
+\begin{aligned}
+ax^2 + bx + c = 0 &amp;\Longleftrightarrow x^2 + \frac{b}{a}x + \frac{c}{a} = 0\\
+&amp;\Longleftrightarrow x^2 + \frac{b}{a}x + \frac{b^2}{4a^2} - \frac{b^2}{4a^2} + \frac{c}{a} = 0 \\
+&amp;\Longleftrightarrow \left(x + \frac{b}{2a}\right)^2  - \frac{b^2}{4a^2} + \frac{c}{a} = 0 \\
+&amp;\Longleftrightarrow \left(x + \frac{b}{2a}\right)^2  - \frac{b^2}{4a^2} + \frac{c}{a} = 0 \\
+&amp;\Longleftrightarrow \left(x + \frac{b}{2a}\right)^2  - \frac{b^2-4ac}{4a^2} = 0 \\
+&amp;\Longleftrightarrow \left(x + \frac{b}{2a}\right)^2  = \frac{b^2-4ac}{4a^2}  \\
+&amp;\Longleftrightarrow x + \frac{b}{2a}  = \pm \sqrt{\frac{b^2-4ac}{4a^2}}  \\
+&amp;\Longleftrightarrow x = -\frac{b}{2a}\pm\frac{\sqrt{b^2-4ac}}{\sqrt{4a^2}}  \\
+&amp;\Longleftrightarrow x = \frac{-b \pm \sqrt{b^2-4ac}}{2a}  \\
+\end{aligned}
+$$</code></pre>
+
+<script type="application/shiny-prerendered" data-context="server-start">
+library(learnr)
+knitr::opts_chunk$set(echo = FALSE)
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+learnr:::register_http_handlers(session, metadata = NULL)
+</script>
+ <!--html_preserve-->
+<script type="application/shiny-prerendered" data-context="dependencies">
+{"type":"list","attributes":{},"value":[{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["jquery"]},{"type":"character","attributes":{},"value":["1.11.3"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["rmd/h/jquery"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["jquery.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["rmarkdown"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["1.15"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["bootstrap"]},{"type":"character","attributes":{},"value":["3.3.5"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["rmd/h/bootstrap"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["viewport"]}},"value":[{"type":"character","attributes":{},"value":["width=device-width, initial-scale=1"]}]},{"type":"character","attributes":{},"value":["js/bootstrap.min.js","shim/html5shiv.min.js","shim/respond.min.js"]},{"type":"character","attributes":{},"value":["css/cerulean.min.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["rmarkdown"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["1.15"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["pagedtable"]},{"type":"character","attributes":{},"value":["1.1"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["rmd/h/pagedtable-1.1"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["js/pagedtable.js"]},{"type":"character","attributes":{},"value":["css/pagedtable.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["rmarkdown"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["1.15"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["highlightjs"]},{"type":"character","attributes":{},"value":["9.12.0"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["rmd/h/highlightjs"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["highlight.js"]},{"type":"character","attributes":{},"value":["textmate.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["rmarkdown"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["1.15"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["tutorial"]},{"type":"character","attributes":{},"value":["0.9.2.1"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/tutorial"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["tutorial.js"]},{"type":"character","attributes":{},"value":["tutorial.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.9.2.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["tutorial-autocompletion"]},{"type":"character","attributes":{},"value":["0.9.2.1"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/tutorial"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["tutorial-autocompletion.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.9.2.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["tutorial-diagnostics"]},{"type":"character","attributes":{},"value":["0.9.2.1"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/tutorial"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["tutorial-diagnostics.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.9.2.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["tutorial-format"]},{"type":"character","attributes":{},"value":["0.9.2.1"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["rmarkdown/templates/tutorial/resources"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["tutorial-format.js"]},{"type":"character","attributes":{},"value":["tutorial-format.css","rstudio-theme.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.9.2.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["jquery"]},{"type":"character","attributes":{},"value":["1.11.3"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["rmd/h/jquery"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["jquery.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["rmarkdown"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["1.15"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["font-awesome"]},{"type":"character","attributes":{},"value":["5.1.0"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["rmd/h/fontawesome"]}]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["css/all.css","css/v4-shims.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["rmarkdown"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["1.15"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["bootbox"]},{"type":"character","attributes":{},"value":["4.4.0"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/bootbox"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["bootbox.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.9.2.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["localforage"]},{"type":"character","attributes":{},"value":["1.5"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/localforage"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["localforage.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.9.2.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["tutorial"]},{"type":"character","attributes":{},"value":["0.9.2.1"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/tutorial"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["tutorial.js"]},{"type":"character","attributes":{},"value":["tutorial.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.9.2.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["tutorial-autocompletion"]},{"type":"character","attributes":{},"value":["0.9.2.1"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/tutorial"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["tutorial-autocompletion.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.9.2.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["tutorial-diagnostics"]},{"type":"character","attributes":{},"value":["0.9.2.1"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/tutorial"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["tutorial-diagnostics.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.9.2.1"]}]}]}
+</script>
+<!--/html_preserve-->
+<!--html_preserve-->
+<script type="application/shiny-prerendered" data-context="execution_dependencies">
+{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["packages"]}},"value":[{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["packages","version"]},"class":{"type":"character","attributes":{},"value":["data.frame"]},"row.names":{"type":"integer","attributes":{},"value":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34]}},"value":[{"type":"character","attributes":{},"value":["backports","base","compiler","datasets","digest","evaluate","graphics","grDevices","htmltools","htmlwidgets","httpuv","jsonlite","knitr","later","learnr","magrittr","markdown","methods","mime","promises","R6","Rcpp","rmarkdown","rprojroot","shiny","stats","stringi","stringr","tools","utils","withr","xfun","xtable","yaml"]},{"type":"character","attributes":{},"value":["1.1.4","3.5.3","3.5.3","3.5.3","0.6.20","0.14","3.5.3","3.5.3","0.3.6","1.3","1.5.1","1.6","1.24","0.8.0","0.9.2.1","1.5","1.1","3.5.3","0.7","1.0.1","2.4.0","1.0.2","1.15","1.3-2","1.3.2","3.5.3","1.4.3","1.4.0","3.5.3","3.5.3","2.1.2","0.9","1.8-4","2.2.0"]}]}]}
+</script>
+<!--/html_preserve-->
+</div>
+
+</div> <!-- topics -->
+
+<div class="topicsContainer">
+<div class="topicsPositioner">
+<div class="band">
+<div class="bandContent topicsListContainer">
+
+<!-- begin doc-metadata -->
+<div id="doc-metadata">
+<h2 class="title toc-ignore" style="display:none;">Tutorial</h2>
+</div>
+<!-- end doc-metadata -->
+
+</div> <!-- bandContent.topicsListContainer -->
+</div> <!-- band -->
+</div> <!-- topicsPositioner -->
+</div> <!-- topicsContainer -->
+
+
+</div> <!-- bandContent page -->
+</div> <!-- pageContent band -->
+
+
+
+
+<script>
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+</script>
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+
+</html>

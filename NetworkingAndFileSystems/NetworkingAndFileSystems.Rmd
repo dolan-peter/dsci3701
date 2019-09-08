@@ -1,0 +1,371 @@
+---
+title: "File Systems and Networks"
+output: learnr::tutorial
+runtime: shiny_prerendered
+---
+
+```{r setup, include=FALSE}
+library(learnr)
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+
+## File Systems
+
+Follow along with the explanation by typing things as you read.
+
+Your computer stores information in **files** and organizes these files using **directories** (on some systems they are called **folders**).  Most of you are familiar with how this structure is represented graphically.
+
+The data structure underlying a file system is that of a **tree** (to keep this discussion simple I am leaving out a few complications with which some of you may be familiar such as links and file streams).  The **nodes** in the tree represent directories.  We typically think of files as **belonging** to (or being **within**) a directory, and as such, usually don't represent the files as nodes.  An edge represents the location of a subdirectory.  For example, if the directory `var` contained the directory `log` then that situation would be represented diagrammatically as follows:
+```
+(var)
+  |
+  |
+(log)
+```
+
+In the example above we would say that `log` is a **subdirectory** of `var`.  Every directory has a **parent directory**  (more on that below)
+
+### Special Directories 
+
+There is a special node in a tree called the root, and the corresponding directory on your computer is called the **root directory**.  The parent of root is also root.  This is a property that is unique to root.  Parent directories are denoted by `..` (which means "up one").  
+
+Each user has a special directory associated to their **user account** called their **home directory**.
+
+On Linux machines there are some special sub directories associated to lower-level details of the computer.  For example the `/dev` subdirectory provides a mechanism for accessing Linux **devices**.
+
+There is another directory known as the **working directory**.  In a command line situation this is the default location at which things occur.  It's name can be listed using `pwd` (from the terminal), and using `getwd()` in an R Console.  The parent directory is specified using `..` and the current working directory is specified using `.`.
+
+### Paths
+
+The location of a file is specified by a 
+
+* file name, and a
+* file path
+
+Generally speaking there are two major ways to specify the path to a desired file:
+
+* Absolute and
+* Relative
+
+An absolute path is provided relative to the root node.  For example, here is the absolute path to the working directory used by the RMarkdown knitting process:
+
+```{bash, echo=FALSE}
+pwd
+```
+
+In all cases there is a special character used to separate the directory names.  In unix (and thus linux and Macintosh) the separator character is `/`.  In windows the character is `\`.  Since `\` is used as an **escape character** in most programming languages (for example `\n` represents a newline character), it can be tedious to represent a Windows file path as a string.  Every `\` in  the path has to be replaced by `\\` in the string (because `\\` is how a single back-slash character is represented)
+
+Most languages dealing with files will use `/` even on systems that use `\` so we will use `/` as our path separator character.
+
+Root is specified as `/`, so the directions describe how to traverse the file structure tree from the root, `/` to the desired node (which represents a subdirectory).
+
+On the other hand **relative paths** are given from the current working directory.  So consider the following subset of a file system (where the working directory is specified with an asterisk '*')
+```
+                (home)
+                /    \
+            (*peter) (washington)
+```
+
+Suppose that the `washington` directory contained a file named `resource.txt`.  The relative path from the current working directory to that resource would be `../washington/resource.txt`.  Notice the use of `..` to represent the "parent directory" (which is `home` in this case).
+
+The symbol `~` represents the current users home directory and `~<username>` represents another users home directory, for example `~washington` would be the home directory for washington.
+
+### Search Path
+
+Programs are run from the command line by specifying the file name.  The absolute path for a command will always work but may be a hassle to type.  The **search path** is a list of directories that are **searched** for a command.  For example the `ls` command is actually `/bin/ls`.  Because the subdirectory `/bin` is in the search path, I can type `ls` in the command line and no matter what directory I am in I will see the contents of the directory.  The `whereis` command will show the directories in the search path that contain a command (this is helpful if more than one version of a program is iinstalled)
+
+### Quiz
+
+Answer the following questions for the following directory structure:
+
+```
+                       (/)
+       _________________|___________________
+      |           |               |         |
+    (bin)       (var)           (home)     (tmp)
+                  |            /     \
+                (log)     (*Peter)   (washington)
+                              |
+                          (project)
+```
+
+```{r quiz}
+quiz(
+  question("Which path is the absolute path specifying the file `vim.log` in the `log` subdirectory",
+    answer("/var/log/vim.log",correct=TRUE),
+    answer("../../var/log/vim.log"),
+    answer("~washington/../../var/log/vim.log"),
+    answer("../var/log/vim.log")
+  ),
+  question("Which path is the relative path specifying the file `vim.log` in the `log` subdirectory",
+    answer("/var/log/vim.log"),
+    answer("../../var/log/vim.log",correct=TRUE),
+    answer("~washington/../../var/log/vim.log"),
+    answer("../var/log/vim.log")
+  ),
+  question("Which path is the path specifying the file `vim.log` from the user `washington`'s home directory",
+    answer("/var/log/vim.log",correct=TRUE),
+    answer("../../var/log/vim.log"),
+    answer("~washington/../../var/log/vim.log"),
+    answer("../var/log/vim.log")
+  ),
+  question("Which linux command shows the current working directory",
+    answer("`pwd`",correct=TRUE),
+    answer("`ls`"),
+    answer("`cd`"),
+    answer("`cat`")
+  ),
+  question("Multiple copies of the linux command `myCMD` exist in the subdirectories `/usr/bin`, `/usr/etc`, and in `/usr/sbin`.  The search path is `/root/anaconda3/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin`.  What is the full path of the command that will be run if a user types `myCMD` at the terminal window?",
+  answer("/usr/bin"),
+  answer("/usr/sbin",correct=TRUE),
+  answer("/root/anaconda3/bin"),
+  answer("/usr/etc")
+  )
+)
+```
+
+
+## Navigating the File System
+
+Open RStudio and look at your `Files` tab (mine is in the lower right corner).  You will probably see your **home directory**.  Here you navigate using the mouse.  You can see the `..` specification for the parent directory, and you can enter a subdirectory by clicking on the appropriate folder.  Notice that this does NOT change the working directory in the console, but the "More" droplist allows you to "Set as Working Directory".  It also allows you to "Change to Working Directory".
+
+In the terminal window you no longer have the ability to click.  Instead you use the command `cd` for **change directory**.  The `cd` command accepts a path as an argument.  That path can be relative or absolute.  It is common to use `cd ..` to move up to the parent directory.
+
+You can list the contents of the directory with `ls`.  The command `ls -l` is list with the **long flag** and that will show you more information.
+
+Open a terminal window in JupyterHub change directory to the *parent directory of your home directory* and do the command `ls -l`
+
+You will see all the home directories of the other users.  Each row is a separate file or directory.  Each column reveals different information.  :
+
+Column    |  Short Name  | Description
+----------|--------------|---------------
+1         | Permissions  | Specifies whether an entry is file or a directory and the **permissions** (see next section)
+2         | Hard links   | Specifies how many "links" are associated to the entry.  Normal files typically have 1 (we aren't discussing linux hard links here), directories typically have as many as the number of subdirectories they contain (NOTE:  Every subdirectory contains an entry for `.` and for `..` so for a directory this number is at least 2)
+3         | Owner        | The user that "owns" the entry (see below)
+4         | Group        | The group to which the entry belongs (see below)
+5         | Size         | The size of the entry (even directories take up disk space so they have a size too)
+6         | Date         | (you might count these are 6,7, and 8:  month, day, time (or year)).  
+7         | name         | This is the name of the file or directory
+
+### Hidden files
+
+File starting with a period are hidden.  You need to use `-a` to see them. So `ls -al` will list all the files, including the hidden ones in long form.
+
+```{r}
+# Add an interpretation quiz here
+```
+
+### Changing Directories
+
+The `cd` command is used to change the working directory.  It accepts both relative and absolute file paths.  Not all possible paths are allowed (see the *Permissions* section for more details).
+
+For example to change the working directory to the parent of the current one use `cd ..`.  Similarly, one can change to one's home directory using `cd ~`.
+
+## Permissions
+
+The first column in the long list of the files in the `/home` directory specifies the **permissions**.  There are three categories of **permission scope** and three categories of **permission types** used in plain linux.  There is a much more sophisticated permission system known as selinux (security enhanced linux), but we are not going to cover that in this class.
+
+Every entry (which I will also call a **resource**) in a directory has both an 
+
+* **owner** and a 
+* **group**
+
+The owner is a user account (secretly it's just a number).  User accounts in linux can belong to **groups**.  A user can belong to multiple groups.  However a directory entry can only be associated to one group.
+
+The three permission scopes are related to these concepts:
+
+* User (symbolized as `u`).  This is the **owner** of the resource
+* Group (symbolized as `g`).  This applies to any account that is in the same group as the resource
+* Other (symbolized as `o`).  This applies to every other account
+
+The permission column is exactly 10 characters long.  The first letter in the permission column is usually either `d` or `-`.  Which indicates whether or not the entry is a directory or a file.  The remaining 9 are broken into groups of three.  The first group is for the user `u`.  The second triplet is fo the group `g`, and the third triplet is for the other accounts `o`.
+
+Within each triplet there the three characters correspond to
+
+* READ (this will usually be `r` or `-`)
+* WRITE (this will usually be `w` or `-`)
+* EXECUTE (this will usually be `x` or `-`)
+
+So, for example 
+
+The permission string: `-rw-r--r--` can be understand as the following 4 components:
+
+```
+-   |  rw-  | r--   | r--
+type|  user | group | other
+```
+
+So it is a normal file.  The user (owner) has read and write access to the file.  Group members have read access and so do all other accounts.
+
+`r` means **read** access.  The contents of the resource can be examined.  For a file this means the contents can of the file can be read (perhaps with a command such as `cat`, or `less`). For a directory this means that the entries in the directory can be listed (perhaps with `ls`)
+
+`w` means **write**.  A file can be over-written even if it can't be read so `-w-` is a possible triplet.  For a directory, `w` means that files can be added or removed.  Without `w` on a directory files can't be added or removed.
+
+`x` means **executable**.  For files, this means that the file either a **binary executable** or a **shell script** can be run from the command line.  For directories this means that the subdirectory with the `x` permission can be part of a file path.  This allows one user to provide resources to another user without exposing the upper level contents of their system.  Without `x` most details become invisible.  If I have `r` access I can still see file names... but no information about them.  I can **not** change to that directory if I don't have `x`.  I **can** even without `r` (although I can't see anything).
+
+There are other complications (such as the "sticky bit" and the "super user" bit which I'm leaving out)
+
+### Changing Permissions
+
+You can change permissions using the `chmod` command.  The basic structures is `chmod [ugo][+/-][rwx] <file>`
+
+So, for example, to add the ability for the owner of the file to execute the script `hello.sh` (in the current working directory).  I could type `chmod u+x hello.sh`.
+
+I can change owner with `chown <user> <file>` (if I own it).  I can also change the group using `chown :<group> <file>`.  Or change the owner and the group simultaneously: `chown <user>:<group> <file>`.
+
+
+```{r pquiz}
+quiz(
+  question("The permissions column for an `ls -l` entry is drw--wxr--.  What priviliges are granted to the **user** (aka the owner)",
+    answer("read",correct=TRUE),
+    answer("write",correct=TRUE),
+    answer("execute"),
+    answer("group access")
+  ),
+  question("The permissions column for an `ls -l` entry is drw--wxr--.  What priviliges are granted to the **other users**",
+    answer("read",correct=TRUE),
+    answer("write"),
+    answer("execute"),
+    answer("group access")
+  ),
+  question("The permissions column for an `ls -l` entry is drw--wxr--.  What priviliges are granted to the **group** (aka the owner)",
+    answer("read"),
+    answer("write",correct=TRUE),
+    answer("execute",correct=TRUE),
+    answer("group access")
+  ),
+  question("In order to list the entries in a directory what permission(s) must be ",
+    answer("/var/log/vim.log",correct=TRUE),
+    answer("../../var/log/vim.log"),
+    answer("~washington/../../var/log/vim.log"),
+    answer("../var/log/vim.log")
+  ),
+  question("Which linux command shows the current working directory",
+    answer("`pwd`",correct=TRUE),
+    answer("`ls`"),
+    answer("`cd`"),
+    answer("`cat`")
+  )
+)
+```
+
+## Network Topology
+
+If a file system's structure can be described by a tree then a network's structure can be described by a graph (in the node and edge meaning of the term).
+
+Every network entity under consideration is associated to a node, and the edges between nodes represent a channel of communication.  
+
+Most home networks have a **star topology** where one central hub mediates communication between all other network capable devices in the house.  Businesses might have a more complicated topology where different departments have distinct networks to help keep corporate interests separated.
+
+Most networked computers have multiple **interfaces** that are the means by which the computer and its programs interacts with the larger network.  For example, the JupyterHub server has two:  One is an ethernet interface (more on that below) that is the means by which the computer communicates with the larger network, and the other is a special **loop back** interface that allows a program (or user) a special way to refer to the machine itself.
+
+All modern networking divides the communication process into **layers**.  The most popular formal networking model recognizes seven layers.  The internet, as it is usually used, is designed around four (explained in detail below):
+
+* link
+* internet (some references call this the network layer)
+* transport
+* application
+
+### The Link Layer
+
+In order for information to be transferred it must be broken up into pieces and sent from node to node.  The level at which this occurs is the **link layer**.  This is the "brass tacks level" where the physical media such as wires or radio waves exist and the level at which the  physical conventions used to encode the logical bits and bytes is employed. 
+
+Ethernet, whether used by physical cabling like cat6 or wireless connections, is an example of a **link level protocol**.  Open up a terminal on a jupyterhub and type `ip link`.  You should see something very similar to the following:
+
+```
+jupyter-test@jupyterhub:~$ ip link
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN mode DEFAULT group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+2: ens3: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP mode DEFAULT group default qlen 1000
+    link/ether 52:54:00:66:98:30 brd ff:ff:ff:ff:ff:ff
+```
+
+This shows us the two interfaces `lo` and `en3`.  The first is the loopback interface, and the second is the ethernet interface.  The words between the angle brackets `<` and `>` are state flags (consider them an answer to a yes/no question).  You will, mostly, be ignoring that information, but if you find an important network communication is failing you might want to check for `UP` and `DOWN` flags (which should be self-explanatory).  The other details you can also usually ignore, but you might be interested in the `link/ether` address.  In our example above that is `52:54:00:66:98:30`.  This is also known as a MAC address and every network device is supposed to have a unique address.  Each number separated by `:` encodes an 8 bit number (aka a **byte**), but, as is usual for telecommunications it is referred to as an **octet**.  An octet is usually represented by two hexademical digits, each of which is referred to as a **nibble** (because two nibbles make a byte... ha!).  
+
+Recall the following translation pattern:
+
+```
+Hex   |  bytes | |Hex    | bytes | |  hex | bytes | | hex  | bytes
+------|--------|-|-------|-------|-|------|-------|-|------|------
+0     | 0000   | | 4     | 0100  | | 8    | 1000  | | C    | 1100  
+1     | 0001   | | 5     | 0101  | | 9    | 1001  | | D    | 1101
+2     | 0010   | | 6     | 0110  | | A    | 1000  | | E    | 1110  
+3     | 0011   | | 7     | 0111  | | A    | 1001  | | E    | 1111  
+```
+
+The first 3 octets in a MAC address are the OUI (Organizationally Unique ID).  Which indicates the manufacturor of the network device in a publically registered OUI and indicates an in-house identity if the address is privately managed.
+
+In our case those 3 octets are `52:54:00`.  The second nibble of the first octet (in our case `2`) determines whether or not the address is a **Private mac addresss**.  The short answer to whether or not the address is public or private is if the second-to-last bit in the last nibble is a 1 (private) or a 0 (public).  
+
+There is a complication involving unicast vs multicast which I'm not going to go into here... so the short version is-- if the second number in the first octet is a 2, 6, A, or E, then the address is privately maintained.  As can be seen from our first octet of `52` the MAC address is priately maintained (this usually means it is part of a **virtual** bridge or virtual switch-- something managed in software that emulates an actual physical device).  That's the case for us.
+
+### The internet layer
+
+This is the layer that has to concern itself with how information passes through (potentially) MULTIPLE nodes to get to its destinaton.  This is where the **internet address** comes into play.
+
+In a terminal you can access information at this level using `ip address`.  Try this in a JupyterHub Terminal window.  THis is what you'll see on my server:
+
+```
+jupyter-test@jupyterhub:~$ ip address
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host
+       valid_lft forever preferred_lft forever
+2: ens3: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000
+    link/ether 52:54:00:66:98:30 brd ff:ff:ff:ff:ff:ff
+    inet 192.168.122.224/24 brd 192.168.122.255 scope global dynamic noprefixroute ens3
+       valid_lft 2467sec preferred_lft 2467sec
+    inet6 fe80::89ff:839d:d7bc:b01a/64 scope link noprefixroute
+       valid_lft forever preferred_lft forever
+```
+
+Notice we see both the link level AND new information.
+
+The original (and still most widely used) protocol on the internet is IP v 4 (Internet Protocol version 4).  Address are 4 octets-- usually represented in decimal rather than hexadecimal.  Hence values can range from 0 to 255 (recall that $2^8=256$).
+
+Our ethernet interface has an ipv4 address of `192.168.122.224`.  The `192.168.x.x` address block is **private ip** which means that it's not mean to be used outside of the local network.  Some network device will, typically, keep track of a translation table and convert **internal IP** to **external IP**.  
+
+The details aren't particularly important for this class, but you should be able to look at a ver 4 ip address and know if it is public or private.  THere are 3 **blocks** of private ip addresses:
+
+* 192.168.x.x - (about 65,000 IP addresses)
+* 172.16.0.0 - 172.31.255.255   (about a million IP addresses)
+* 10.x.x.x   (around 16.8 million IP addresses)
+
+The newer version of the internet is `ipv6`.  (We skipped over version 5).  It is not as widely adopted, but most network devices can recognize it now.  An ipv4 address is usually represented with 4 octets (hence 4*8=32 bits).  An ipv6 address is 128 bits organized into eight `quibbles` (short for quad nibbles).  Each quibble is 4 hex digits (so 16 bits).  The quibbles are separated by colons and  an address is allowed to have **one** (and only one) double  colon '::` which means all the "left-out" quibbles are 0000.   The reported ipv6 address for `en3` is  `fe80::89ff:839d:d7bc:b01a`.  Which is short for `fe80:0000:0000:0000:89ff::839d:d7bc:b01a`.  
+
+Similarly to ipv4 there is a range of ipv6 addresses set aside for something *similar* to private IP.  The difference between ipv4 and ipv6 (in this regard) is that ipv6 wants **all** ip addresses to be unique... in ipv4 the same private ip addresses may appear in many local networks (for example, the URL: http://192.168.1.1 will, for many home networks, allow a user to access the router's web interface from a web browser run on a client hooked up to the local network).  In ipv6 the `fe80::` address block is set for **auto configuration** however there are so many other octets left over for addresses that even the local addresses can all be unique.
+
+The loopback ipv4 address is always `127.0.0.1` and for ipv6 it is `::1`.
+
+### CIDR notation
+
+You might notice that both the ipv4 and the ipv6 addresses are followed by a single forward slash `/` and then a number.  This is related to **routing**.  The way in which information is transferred (via the link level) from one node to another is called routing.  
+
+A good analogy for how information is passed from node to node is the process that a letter (in the US) follows as it moves through the mail system:
+
+* I write a letter and put it in an envelope with an address
+* I put the sealed letter in my mailbox and raise a flag on the box.
+* The mail person sees the raised flag, picks up the letter, and delivers the letter to my local postoffice
+* The post office looks at the address and decides which van needs to take it to the next processing center
+* The letter is moved from processing center to processing center.  At each step the center looks at the letter and decides the next destination.
+* The letter eventually makes it to the local post office in the destination town
+* The mail person delivers the letter to the indicated address
+* The recipient brings the letter inside
+* The envelope is opened and the letter is read
+
+This is, essentially, how the information is delivered between nodes on the internet.  The address on the letter allows the information to be transferred to the destination, and the return address allows more correspondance to be sent back to the original person.  The destination address on the letter has **hierarchical** directions.  For example, my address is
+
+```
+407 East 6th Street
+Morris, MN 56267
+```
+
+The first line is my **local address**.  The second line indicates the proper town and state.  It is more of a general address. 
+
+In a CIDR address the number indicates how many bits in the address are associated to the **network** and how many to the **client**.  This is similar to saying how many of the 128 bits are used to indicate the first line (`407 East 6th street`) and how many are used to indicate the second line `Morris, MN 56267`.
+
+Instead of a postal address the IP address is used.  The number after the slash `/` in the CIDR notation indicates how many bits in the address are related
+

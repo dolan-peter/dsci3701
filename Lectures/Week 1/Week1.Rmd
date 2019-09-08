@@ -74,6 +74,11 @@ This week, in class,  we will go over
         * DNS name
   * firewall
   * ssh
+  
+#NOTES
+
+Did not cover ssh or GIT
+
 * GIT (with tutorial)
   * `www.git.com`
   * `git.umn.edu` (our local github server)
