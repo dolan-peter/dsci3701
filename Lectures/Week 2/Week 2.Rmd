@@ -97,7 +97,32 @@ After any major changes from somebody else **Pull** your changes.
 
 In the terminal change to the diretory with the git files.
 
-You need to use `git add` to add files to the repository.  You can then use `git commit` to commit the changes to your repository, and `git push` to update the central repository (the one on `github.umn.edu`)
+You need to use `git add` to add **changes** to your repository (such as a new file).  For example, all changes to text files in the current directory could be a added as follows:
+
+```
+git add *.txt
+```
+
+Notice the use of `*` as a wild-card character.  This is common in command line interfaces-- most shells understand it and so does window's `cmd` and `powershell` utilities.  The asterisk stands for *zero or more characters*.  This should **not** be confused with the use of `*` in most regular expression implementations.  
+
+It is common to use
+
+```
+git add .
+```
+
+Which will add all the changes to files in the current working directory (but **not** in subdiretories).  To add all changes use
+
+```
+git add --all
+```
+
+You can then use `git commit` to commit the changes to your repository.  Using `git commit` will bring up a (by default) a vim window.
+
+
+and `git push` to update the central repository (the one on `github.umn.edu`)
+
+The commands `git add` 
 
 ## File Manipulation
 
@@ -196,51 +221,3 @@ Similarly `a` starts appending ONE character after the cursor and
 
 **I will add more**
 
-# Review of Functions and R
-
-* Reminder of 
-    * Function header
-    * Function body
-    
-```{r}
-looper=function(n){
-  n=floor(n) # Ensure that the input is an integer
-  if(n<=0){stop("n must be an integer greater than 1")}
-  loop=c(n)
-  while(n!=1){
-    if(n%%2==0){
-      n=n/2
-    } else{
-      n=3*n+1
-    }
-    loop=c(loop,n)
-  }
-  return(loop)
-}
-#loops=sapply(1:100000,function(n){length(looper(n))})
-loops=sapply(1:1000,function(n){length(looper(n))})
-plot(loops)
-```
-
-```{python}
-import matplotlib.pyplot as plt
-def looper ( n ):
-  "This calculates the 3n+1 loop"
-  n=int(n)  
-  if n < 0:
-    raise ValueError('n should be greater than 0')
-  loop = [n]
-  while (n!=1):
-    if (n%2==0):
-      n=int(n/2) #ensure it remains an integer
-    else:
-      n=3*n+1
-    loop.append(n)
-  return(loop)
-  
-looper(3)
-results=list(map(lambda n: len(looper(n)),range(1,1000)))
-plt.plot(range(1,1000),results,'ro')
-```
-
-https://docs.microsoft.com/en-us/azure/devops/pipelines/create-first-pipeline?view=azure-devops&tabs=tfs-2018-2

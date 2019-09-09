@@ -1,0 +1,106 @@
+---
+title: "Tutorial"
+output: learnr::tutorial
+runtime: shiny_prerendered
+---
+
+```{r setup, include=FALSE}
+library(learnr)
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+
+## LaTEX
+
+The name of the language most commonly used to generate mathematical equations for publications is known as LaTEX (prounounced La-Tech).  Although LaTEX is actually a complete type-setting language, we are mostly going to use it for generating mathematical expressions an special symbols.
+
+RMarkdown documents (and Markdown cells in Jupyter notebooks) understand Latex.  You wil mostly be using
+
+* Math mode
+* Display math mode
+
+### Math Mode
+
+Expression between single dollar signs, `$`  are in math mode.  For example:
+   
+Output: $\mu$   
+Raw: `$\mu$`   
+
+Most character don't have special meanings, however `_` make a subscript `^` a superscript, and curly braces `{` and `}` are used to "group".  So, $x_{12}$ is generated using `$x_{12}$.  Whereas `$x_12$` generates $x_12$.
+
+The backslashe character, `\` is usually followed by text and the resulting entity may be turned into a special character (as in the case of `\mu`), or it may indicate a command.  For example `\frac` is a command that expects **two** arguments:  The expression `\frac 12` uses `1` as the first argument and `2` as the second:  $\frac 12$. In order to have the argument encompass multiple characters use curly braces:  `\frac{12}{24} = \frac 12` will generate  $\frac{12}{24} = \frac 12$.
+
+The math mode font is slightly different than the normal text font.  Look at the differences between these two threes:  3 versus $3$.  Furthermore, in math mode, most text characters are in italics.  The convention is for variables to be in italics but **not** for important functions.  Hence use `\sin(\theta)` instead of `sin(\theta)` which look like $\sin(\theta)$ vs $sin(\theta)$.
+
+The mathmode font can be overridden through the use of `\textrm{<stuff>}` (for text roman).  In my writing I will frequently use expresions like `$\textrm{P}(X=k)=\cdots$` (which knits into $\textrm{P}(X=k)=\cdots$)
+
+
+### Display Math Mode
+
+RMarkdown prefers (as evidenced by background highlighting) for the double `$` construction to look as follows:
+
+```
+$$
+<stuff>
+$$
+```
+
+By default display math uses bigger symbols and centers the expression.  It is the difference between $\int_2^3 x^3 dx$ and
+
+$$
+\int_2^3 x^3 dx
+$$
+
+## Some common LaTex expressions:
+
+Category           |  Example                  |  Notation
+-------------------|---------------------------|-------------------------
+Greek symbols      |$\sigma, \mu$              |`\sigma`, `\mu`
+Inequality Symbols |$\ne\ \ge\ \le$            | `\ne`, `\ge`, `\le` 
+Fractions          | $\frac{1}{1+\frac{2}{e}}$ | `\frac{1}{1+\frac{2}{e}}` 
+Adding a space     | (see net line)            | `\ ` (backslash followed by a space)
+Set symbols        | $\subset\ \supset\ \subseteq\ \supseteq\\ \in\ \notin\ \cup\ \cap\ \times\ \emptyset$ | `$\subset\ \supset\ \subseteq\ \supseteq\ \in\ \notin\ \cup\ \cap\ \times\ \emptyset$`
+Logical Expressions|$\forall\ \exists\ \Rightarrow\ \\\Leftrightarrow\ \wedge\ \vee$ | `$\forall\ \exists\ \Rightarrow\ \wedge\ \vee$`
+sub and super script | $2^{3x}$ and $x_i$         | `$2^{3x}$` `$x_i$`
+Common Functions     | $\sin()\ \cos()\ \tan()\ \log()\ \ln()\ \exp()$ | `\sin()\ \cos()\ \tan()\ \log()\ \ln()\ \exp()`
+grouping             | $\log\left(\frac{1}{1+\exp(-x)}\right)$ | `\log\left(\frac{1}{1+\exp(-x)}\right)` (note the use of `\left(` and `\right)`)
+newlines             | see above    | just use `\\` at the end of the line
+roots                |$\sqrt{3x}\ \sqrt[3]{2x^2-1}$ | `\sqrt{3x}\ \sqrt[3]{2x^2-1}`
+miscelleaneous       |$\pm$ | `\pm`
+
+## The *aligned* environment.
+
+This can be used to create nicely formatted sequences of equations.  Consider the following 
+$\Longleftrightarrow$
+
+$$
+\begin{aligned}
+ax^2 + bx + c = 0 &\Longleftrightarrow x^2 + \frac{b}{a}x + \frac{c}{a} = 0\\
+&\Longleftrightarrow x^2 + \frac{b}{a}x + \frac{b^2}{4a^2} - \frac{b^2}{4a^2} + \frac{c}{a} = 0 \\
+&\Longleftrightarrow \left(x + \frac{b}{2a}\right)^2  - \frac{b^2}{4a^2} + \frac{c}{a} = 0 \\
+&\Longleftrightarrow \left(x + \frac{b}{2a}\right)^2  - \frac{b^2}{4a^2} + \frac{c}{a} = 0 \\
+&\Longleftrightarrow \left(x + \frac{b}{2a}\right)^2  - \frac{b^2-4ac}{4a^2} = 0 \\
+&\Longleftrightarrow \left(x + \frac{b}{2a}\right)^2  = \frac{b^2-4ac}{4a^2}  \\
+&\Longleftrightarrow x + \frac{b}{2a}  = \pm \sqrt{\frac{b^2-4ac}{4a^2}}  \\
+&\Longleftrightarrow x = -\frac{b}{2a}\pm\frac{\sqrt{b^2-4ac}}{\sqrt{4a^2}}  \\
+&\Longleftrightarrow x = \frac{-b \pm \sqrt{b^2-4ac}}{2a}  \\
+\end{aligned}
+$$
+
+Which can be generated using the following code:
+
+```
+$$
+\begin{aligned}
+ax^2 + bx + c = 0 &\Longleftrightarrow x^2 + \frac{b}{a}x + \frac{c}{a} = 0\\
+&\Longleftrightarrow x^2 + \frac{b}{a}x + \frac{b^2}{4a^2} - \frac{b^2}{4a^2} + \frac{c}{a} = 0 \\
+&\Longleftrightarrow \left(x + \frac{b}{2a}\right)^2  - \frac{b^2}{4a^2} + \frac{c}{a} = 0 \\
+&\Longleftrightarrow \left(x + \frac{b}{2a}\right)^2  - \frac{b^2}{4a^2} + \frac{c}{a} = 0 \\
+&\Longleftrightarrow \left(x + \frac{b}{2a}\right)^2  - \frac{b^2-4ac}{4a^2} = 0 \\
+&\Longleftrightarrow \left(x + \frac{b}{2a}\right)^2  = \frac{b^2-4ac}{4a^2}  \\
+&\Longleftrightarrow x + \frac{b}{2a}  = \pm \sqrt{\frac{b^2-4ac}{4a^2}}  \\
+&\Longleftrightarrow x = -\frac{b}{2a}\pm\frac{\sqrt{b^2-4ac}}{\sqrt{4a^2}}  \\
+&\Longleftrightarrow x = \frac{-b \pm \sqrt{b^2-4ac}}{2a}  \\
+\end{aligned}
+$$
+```

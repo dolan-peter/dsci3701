@@ -1,0 +1,58 @@
+---
+title: "Tutorial"
+output: learnr::tutorial
+runtime: shiny_prerendered
+---
+
+```{r setup, include=FALSE}
+library(learnr)
+knitr::opts_chunk$set(echo = FALSE)
+source("checkBasicRExercises.R",local=TRUE)
+tutorial_options(exercise.checker = check_exercise)
+```
+
+
+## Named arguments in R
+
+### Exercise 
+
+Write R code required to take exactly 3 arguments and calculate the [geometric mean](https://en.wikipedia.org/wiki/Geometric_mean) of the three arguments.  Your function should use $x,y,$ and $z$ in the parameter list and all parameters should have a default value of 1:
+
+```{r geometric-triplet-check}
+cat("in here.")
+```
+
+```{r geometric-triplet, exercise=TRUE, exercise.lines=5}
+geom.mean.3<-function(...){ #replace ... with parameter list.  Your arguments should be x,y, and z
+  #add body here
+}
+geom.mean.3(2,3,4)
+```
+
+### Exercise with Code
+
+
+
+### Quiz
+
+*You can include any number of single or multiple choice questions as a quiz. Use the `question` function to define a question and the `quiz` function for grouping multiple questions together.*
+
+Some questions to verify that you understand the purposes of various base and recommended R packages:
+
+```{r quiz}
+quiz(
+  question("Which package contains functions for installing other R packages?",
+    answer("base"),
+    answer("tools"),
+    answer("utils", correct = TRUE),
+    answer("codetools")
+  ),
+  question("Which of the R packages listed below are used to create plots?",
+    answer("lattice", correct = TRUE),
+    answer("tools"),
+    answer("stats"),
+    answer("grid", correct = TRUE)
+  )
+)
+```
+

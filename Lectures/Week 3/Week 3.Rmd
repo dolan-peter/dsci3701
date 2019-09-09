@@ -1,0 +1,133 @@
+---
+title: "Week 3"
+author: "Peter Dolan"
+date: "9/8/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(reticulate)
+matplotlib<-import("matplotlib")
+matplotlib$use("Agg",force=TRUE) #Enable the matplotlib rendering engine.
+```
+
+# Review of Functions and R
+
+A **function** (in the computer science sense of the word) is a collection of code that is attached to a name.  There are three important components to every function:
+
+* The inputs to the function (also known as the parameters or arguments)
+* The code itself
+* The output returned by the function.
+
+In the languages that we will use (R and Python) new functions can be defined in code.  The expression used to define a function is broken down into two parts:
+
+* The function header: determines allowed arguments
+* The function body:  the code to be executed
+    
+In R the function header is the line containing the keyword `function`.  The word `function` is followed by parenthesis and the **argument list**.  For example:
+
+```{r}
+function(n){
+  n+1
+}
+```
+
+This is an **anonymous function** because it hasn't been given a name:
+
+```{r}
+my.func<-function(n){
+  n+1
+}
+```
+
+We have now created a function called `my.func` which will take one valud as an argument, add one to that value, and return the result.  Let's look at the details a bit more closely:
+
+The **argument list** is the values between the parenthesis.  In this case:  `n`.  That means the argument is called `n`.  The **function body** is `{n+1}`.  If there is not an explicit **return** function, then the value of the **last expression** is the the value of the function.  So, `my.func(3)` evaluates to the value `4`.  Remember, in R, `+1` can be applied to vectors of numeric type too... so `my.func(c(1,2,3))` would return a vector with the values `2,3,4`.
+
+Let's look at a function with two arguments:
+
+```{r}
+my.subtraction = function(x,y){
+  x-y
+}
+```
+
+Be sure to type this in your console.
+
+Notice what happens we we apply this function to 5 and 3:
+
+```{r}
+my.subtraction(5,3)
+```
+
+R uses **named arguments**.  In this case the function takes **two arguments**.  The first is named `x` and the second is named `y`.  We can **pass a named argument**:
+
+```{r}
+my.subtraction(y=5,x=3)
+```
+
+Notice that even though the 5 and the 3 occur in the same order, the results are different.  This is because in the first example we did not use **naming** when calling the function.  Without naming the arguments the values are assigned "first-come-first-served".  Since `5` was first and `3` was second, they were assigned to `x` and `y` respectively because that is the order in which the arguments appeared in the function parameter list.
+
+In the second example we were explicit about the names of arguments.  Naming an argument over-rides any order considerations.
+
+**Rules so far**:   
+If an argument in a function call is named (example, `my.subtraction(y=5,x=3)`) then assign it to the appropriate variable (if it occurs in the parameter list-- attempting to use an invalid name will generate an error).  **After named arguments are assigned** assign values based off of order on the remaing **unbound** variables.
+
+Example:  `my.subtraction(y=5,3)` will assign a 5 to `y` (because it's named), but then assign the 3 to `x`, because that is the first (and, in this case only) unbound variable.
+
+**default values**:   
+A **default value** can be assigned to a variable.  This value will be assigned to the local variable if not over-ridden in the function call:
+
+```{r}
+my.subtraction = function(x,y=5){
+  x-y
+}
+
+my.subtraction(10)
+```
+
+In the function call `my.subtraction(10)` no naming was used, so the values are assigned by order.  Hence `x` is given the value of 10.  There is no value specified for `y`, but it has a default value of `5`, so that is the value that it receives.
+
+```{r}
+looper=function(n){
+  n=floor(n) # Ensure that the input is an integer
+  if(n<=0){stop("n must be an integer greater than 1")}
+  loop=c(n)
+  while(n!=1){
+    if(n%%2==0){
+      n=n/2
+    } else{
+      n=3*n+1
+    }
+    loop=c(loop,n)
+  }
+  return(loop)
+}
+#loops=sapply(1:100000,function(n){length(looper(n))})
+loops=sapply(1:1000,function(n){length(looper(n))})
+plot(loops)
+```
+
+```{python}
+import matplotlib.pyplot as plt
+def looper ( n ):
+  "This calculates the 3n+1 loop"
+  n=int(n)  
+  if n < 0:
+    raise ValueError('n should be greater than 0')
+  loop = [n]
+  while (n!=1):
+    if (n%2==0):
+      n=int(n/2) #ensure it remains an integer
+    else:
+      n=3*n+1
+    loop.append(n)
+  return(loop)
+  
+looper(3)
+results=list(map(lambda n: len(looper(n)),range(1,1000)))
+plt.plot(range(1,1000),results,'ro')
+```
+
+https://docs.microsoft.com/en-us/azure/devops/pipelines/create-first-pipeline?view=azure-devops&tabs=tfs-2018-2
