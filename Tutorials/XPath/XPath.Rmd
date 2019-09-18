@@ -1,0 +1,210 @@
+---
+title: "XPath"
+output: learnr::tutorial
+runtime: shiny_prerendered
+---
+
+```{r setup, include=FALSE}
+library(learnr)
+knitr::opts_chunk$set(echo = FALSE)
+source("checkXPathExercises.R")
+#   loads makeDirList and ps
+
+tutorial_options(exercise.checker = check_exercise)
+```
+## Introduction
+
+XPath is a pattern recognition language (I'm using the term "language" loosely).  Before doing this tutorial you should be completely familiar with the material in the Networking tutorial that covers absolute and relative paths for filenames.  As a quick reminder, up to a first approximation, the file system for a computer is a tree structure.  The directories form nodes and edges in the tree represent *containment*.  For example, R commands `list.dirs(recursive=TRUE)` will show all the directories and subdirectories from the current working directory.  For an RMarkdown location, by default the working directory is the location of the RMarkdown file.  I have added some subdirectories.  Make sure you explore them graphically and ensure that you understand how the paths listed below correspond to the structure of the subdirectories:
+
+```{r}
+getwd()
+list.dirs(recursive=TRUE)
+```
+
+Let's visualize the structure as a tree using the `data.tree` package (you may need to install this).  Be certain you understand all the steps used in the code below-- you may ask me about it in class if you have any questions.  The key thing to notice is that I am converting a vector of character strings into a `list` that mirrors the structure of the subdirectories:
+
+```{r,echo=TRUE}
+library(data.tree)
+makeDirList=function(){
+  dirs<-list.dirs(recursive=TRUE)
+  tmp<-strsplit(dirs,"/")
+  dir.list=list("."=list())
+  invisible(#build a list to match the tree structure of the directory
+    sapply(tmp,
+         function(sub.dir){
+           path=c()
+           for(sub in sub.dir){
+             path=c(path,sub)
+             if(is.null(dir.list[[path]])){dir.list[[path]]<<-list()}
+            }
+          })
+  )
+  return(dir.list)
+}
+dir.list=makeDirList()
+dir.tree<-as.Node(dir.list)
+dir.tree=FindNode(dir.tree,".")
+plot(dir.tree)
+```
+
+## List to XML
+
+We are going to want to convert our tree into XML in order to use XPATH on it.  So we will use the `as_xml_document` function in the `xml2` library (Recall that `xml2` is also used by the package `rvest`)
+
+In `XML` (which is the place where XPATH originated) it would be strange for a *tag* name to have a space.  So it takes a bit of extra work for us to use XPATH on a tree structure like our directory tree, that contains spaces in the node names.  We can, however do it.  The trick is to use a construction like this: `*[name()='Sample A']`.  That command translates into *"nodes with the name `Sample A`"*.  So, for example, here is how we would get all the nodes with the name "Sample A"
+
+
+```{r,echo=TRUE}
+library(xml2)
+dir.xml<-as_xml_document(dir.list)
+xml_find_all(dir.xml,"//*[name()='Sample A']")
+```
+
+**Exercise:**
+
+Repeat the sample above but find all nodes with the name `Sample B`.  You must save the results of `xml_find_all()` to the variable `results`:
+
+```{r Sample-B, exercise=TRUE, exercise.lines = 10}
+dir.list=makeDirList()
+#Add code here to conver `dir.list` into an XML document
+#And then to search for the appropriate nodes
+results<- "More of your code" 
+```
+
+```{r Sample-B-setup}
+ps$addProblem("sampleB")
+```
+
+```{r Sample-B-check}
+# Checker will run original code prior to the check
+ex=ps$getProblem("sampleB")
+
+qid="xml_document"
+ex$addQuestion(qid,correct="Used `as_xml_document`",incorrect="Did not use `as_xml_document`",pt.val=2)
+if(safeTry(any(grepl("as_xml_document",user_code)))){
+  ex$setCorrect(qid)
+}
+
+qid="xml_find_all"
+ex$addQuestion(qid,correct="Used `xml_find_all`",incorrect="Did not use `xml_find_all`",pt.val=2)
+if(safeTry(any(grepl("xml_find_all",user_code)))){
+  ex$setCorrect(qid)
+}
+
+qid="results"
+ex$addQuestion(qid,correct="Variable `results` exists",incorrect="Variable `results` does not exist",pt.val=1)
+if(safeTry(exists("results"))){
+  ex$setCorrect(qid)
+}
+
+qid="4.results"
+ex$addQuestion(qid,correct="Correct number of nodes",incorrect="Incorrect number of nodes",pt.val=2)
+if(safeTry(length(results)==4)){
+  ex$setCorrect(qid)
+}
+
+exercise=ex
+```
+
+**Quiz:** Explain the results 
+
+Answer the following questions about your results:
+
+```{r quiz}
+quiz(
+  question("How many nodes were returned?",
+    answer("1"),
+    answer("2"),
+    answer("4", correct = TRUE),
+    answer("none")
+  ),
+  question("The text `<Sample B/>` means which of the following?",
+    answer("The node is a leaf node", correct = TRUE),
+    answer("The subdirectory represented by the node contains no other subdirectories",correct=TRUE),
+    answer("The node is the root node"),
+    answer("The node is named 'Sample B'",correct=TRUE)
+  ),
+  question("The node `<Sample B>\\n  <Sample A/>\\n</Sample B>` has which of the following properties?",
+  answer("It is a leaf node"),
+  answer("It has one child, `<Sample A/>",correct=TRUE),
+  answer("Its file-system path from the Introduction of this tutorial is '/Sample A/Sample B/Sample A'"),
+  answer("Its file-system path from the Introduction of this tutorial is './Sample A/Sample B'",correct=TRUE)
+)
+)
+```
+
+## More XPath
+
+Read [this short tutorial](https://blog.scrapinghub.com/2016/10/27/an-introduction-to-xpath-with-examples) on XPATH and then do the exercise at the bottom of this page.  As you begin to apply this knowledge to web-scraping for fun and profit it is helpful to know that the `xml_text(*node*)` function in `xml2` pastes together **all** the `text()` nodes in the subtree rooted by the `*node*`.  This means that the **same** text in a web page can occur in different `xml_text()` outputs.  For example, consider the following HTML file:
+
+```{html,echo=TRUE}
+<!DOCTYPE html>
+<HTML>
+  <HEAD>
+    <TITLE>Cool Page</TITLE>
+  </HEAD>
+  <BODY>
+    <P>A very good paragraph with a <a href=".">link</a></P>
+    <P>Another very good paragraph</P>
+  </BODY>
+</HTML>
+```
+
+It has a tree that looks like this:
+
+```{r}
+HTML_list=as_list(read_html("sample1.html"))
+names(HTML_list[[c(1,2)]])=c("","p[1]","","p[2]","") #data.tree needs uniquely named nodes-- change to XPATH style printing
+HTML.tree<-as.Node(HTML_list)
+HTML.tree=FindNode(HTML.tree,"html")
+plot(HTML.tree)
+```
+
+Note:  We would normally think of the `<P>` nodes as being named `P`, but the R package that I'm using to turn the list into a a nice graph requires unique values for the nodes-- so instead of using `P` twice I'm using the XPATH notation `P[1]` and `P[2]` to refer to the first and second sibling with the name of `P`.  Regardless, look at the text associated to the nodes `P[2]` and `body` as far as `xml_text` is concerned:
+
+```{r,echo=TRUE}
+html.tree=read_html("sample1.html")
+cat(xml_text(xml_find_first(html.tree,"//body")))
+cat(xml_text(xml_find_first(html.tree,"//p[2]")))
+```
+
+This is slightly different from how XPATH treats the contents.  As you saw in the tutorial there are **text nodes**.  The `xml_text(<node>)` function concatenates **all** the text nodes that are descendants of the *<node>* given as the first argument.
+
+
+**Exercise:** The URL in the code below points to the Morris page for `weather.com`.  Go to the address in your browser and explore the structure of the page (I find right-clicking and "Inspect" to be very helpful).   Your goal is to craft some code that uses `xml_find_first()`, and `xml_text()` to extract the current temperature in Morris and save it in a variable called `today`.  I needed to use the proper attribute check for mine.
+
+```{r weather-com,exercise=TRUE,exersize.lines=10}
+library(xml2)
+url="https://weather.com/weather/today/l/56267:4:US"
+```
+```{r weather-com-setup}
+ps$addProblem("XPATHExtract")
+```
+
+```{r weather-com-check}
+ex=ps$getProblem("XPATHExtract")
+
+qid="xml_find_first"
+ex$addQuestion(qid,correct="Used `xml_find_first`",incorrect="Did not use `xml_find_first`",pt.value = 2)
+if(safeTry(any(grepl("xml_find_first",user_code)))){
+  ex$setCorrect(qid)
+}
+
+qid="xml_text"
+ex$addQuestion(qid,correct="Used `xml_text`",incorrect="Did not use `xml_text`",pt.value = 2)
+if(safeTry(any(grepl("xml_text",user_code)))){
+  ex$setCorrect(qid)
+}
+
+qid="correct"
+ex$addQuestion(qid,correct="`today` has correct temperature",incorrect="`today` has wrong temperature",pt.value = 4)
+if(safeTry({
+  doc<-read_html(url)
+  answer<-xml_text(xml_find_all(doc,"//div[@class='today_nowcard-temp']"))
+  answer==today
+})){
+  ex$setCorrect(qid)
+}
+
+exercise=ex
+```

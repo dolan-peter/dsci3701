@@ -7,19 +7,47 @@ runtime: shiny_prerendered
 ```{r setup, include=FALSE}
 library(learnr)
 knitr::opts_chunk$set(echo = FALSE)
-source("checkBasicRExercises.R",local=TRUE)
+source("checkBasicRExercises.R") #imports ps.file
 tutorial_options(exercise.checker = check_exercise)
 ```
 
+## Simple Function Exercise 
 
-## Named arguments in R
-
-### Exercise 
+Read the Week 3 material on functions.
 
 Write R code required to take exactly 3 arguments and calculate the [geometric mean](https://en.wikipedia.org/wiki/Geometric_mean) of the three arguments.  Your function should use $x,y,$ and $z$ in the parameter list and all parameters should have a default value of 1:
+```{r geometric-triplet-setup}
+# The problem must be added to the problem-set in <exercise>-setup
+ps$addProblem("geometric mean") #Add the exercise to the problem set 
+```
 
 ```{r geometric-triplet-check}
-cat("in here.")
+# Checker will run original code prior to the check
+ex=ps$getProblem("geometric mean")
+qid="argumentValues"  #Function arguments should be x, y, and z (in that order):
+ex$addQuestion(qid,correct="Correct argument names",incorrect="Incorrect argument names",pt.val=2)
+if(safeTry(all(names(formals(geom.mean.3))==c("x","y","z")))){
+  ex$setCorrect(qid)
+}
+
+qid="defaultValues" #Default values for the arguments should all be 1
+ex$addQuestion(qid,correct="Correct default values",incorrect="Incorrect default values",pt.val=2)
+if(safeTry(all(sapply(formals(geom.mean.3),function(v){v==1})))){ #This could be true even if the number of arguments is wrong, or the names are incorrect
+  ex$setCorrect(qid)  
+}
+
+qid="testRun"
+ex$addQuestion(qid,correct="Correct result for 2,2,-2",incorrect="Incorrect result for 2,2,-2",pt.val=2)
+if(safeTry(geom.mean.3(2,2,-2)==-2)){
+  ex$setCorrect(qid)  
+}
+
+qid="testRun2"
+ex$addQuestion(qid,correct="Correct result for 2,3,4",incorrect="Incorrect result for 2,3,4",pt.val=2)
+if(safeTry(abs(geom.mean.3(2,3,4)-2.884499)<0.001)){
+  ex$setCorrect(qid)
+}
+exercise=ex # `exercise` holds the exercise used by the code checker
 ```
 
 ```{r geometric-triplet, exercise=TRUE, exercise.lines=5}
@@ -29,30 +57,339 @@ geom.mean.3<-function(...){ #replace ... with parameter list.  Your arguments sh
 geom.mean.3(2,3,4)
 ```
 
-### Exercise with Code
+## The if-else statement
 
+Write a function called `parity` that uses an `if-else` statement to return the words "even" if the input is even and "odd" if the input is odd.  You may assume that the input is an integer.
 
+```{r parity, exercise=TRUE, exercise.lines=18}
 
-### Quiz
+parity(0) #should return "even"
+parity(3) #should return "odd"
+parity(-3) #should return "odd"
 
-*You can include any number of single or multiple choice questions as a quiz. Use the `question` function to define a question and the `quiz` function for grouping multiple questions together.*
-
-Some questions to verify that you understand the purposes of various base and recommended R packages:
-
-```{r quiz}
-quiz(
-  question("Which package contains functions for installing other R packages?",
-    answer("base"),
-    answer("tools"),
-    answer("utils", correct = TRUE),
-    answer("codetools")
-  ),
-  question("Which of the R packages listed below are used to create plots?",
-    answer("lattice", correct = TRUE),
-    answer("tools"),
-    answer("stats"),
-    answer("grid", correct = TRUE)
-  )
-)
 ```
 
+```{r parity-setup}
+# The problem must be added to the problem-set in <exercise>-setup
+ps$addProblem("parity check") #Add the exercise to the problem set 
+```
+
+```{r parity-check}
+# Checker will run original code prior to the check
+ex=ps$getProblem("parity check")
+qid="function exists"  #
+ex$addQuestion(qid,correct="Function 'parity' exists",incorrect="function 'parity does not exist",pt.val=1)
+if(safeTry(exists("parity"))){
+  ex$setCorrect(qid)
+}
+
+qid="contains if"  #
+ex$addQuestion(qid,correct="'parity' uses if()",incorrect="'parity' does not use if()",pt.val=1)
+if(safeTry({grepl("if",as.character(body(parity))[2])})){
+  ex$setCorrect(qid)
+}
+
+qid="contains else"  #
+ex$addQuestion(qid,correct="'parity' uses else",incorrect="'parity' does not use else",pt.val=1)
+if(safeTry({grepl("else",as.character(body(parity))[2])})){
+  ex$setCorrect(qid)
+}
+
+qid="check 0" 
+ex$addQuestion(qid,correct="correct output for 0",incorrect="incorrect output for 0",pt.val=1)
+if(safeTry({parity(0)=="even"})){
+  ex$setCorrect(qid)
+}
+
+qid="check -3" 
+ex$addQuestion(qid,correct="correct output for -3",incorrect="incorrect output for -3",pt.val=1)
+if(safeTry({parity(-3)=="odd"})){
+  ex$setCorrect(qid)
+}
+
+qid="check 4" 
+ex$addQuestion(qid,correct="correct output for 4",incorrect="incorrect output for 4",pt.val=1)
+if(safeTry({parity(4)=="even"})){
+  ex$setCorrect(qid)
+}
+
+exercise=ex
+```
+
+## A for loop
+
+This is a two-part problem.  First you need to create a table called `zipcodeTable` and get it in the proper format
+**THEN** You need to write a function .
+
+**Table:**   
+
+* Use `rvest` to scrape the [data on the structnet.com website](http://www.structnet.com/instructions/zip_min_max_by_state.html)  ([Here](https://www.r-bloggers.com/using-rvest-to-scrape-an-html-table/) is a nice example.)
+* Call the table `zip2State`
+* Clean the table:
+    * Drop the ID column too.  
+    * Rename the remaining columns to "State", "ST", "Zip.min", and "Zip.max" (capitalization matters)
+    * Ensure Zip.min and Zip.max are numeric (or integers)
+
+**Function:**
+
+* Create a function called `convert` that takes two arguments:  
+   * One is a **zip-code** and the other 
+   * is a **table** with columns State, Zip.min, and Zip.max (it *could* have other columns too... but it needs those).  
+* The output should be the state/territory(if there are no matches, then return `"**NOT FOUND**"`).
+* It must use a `for` loop to test the potential zip-code range for each row in the table. (hint:  the expression `row in 1:nrow(zip2State)` might be useful to you.)
+* The `zip` argument should be able to be numeric or character.
+
+```{r state-for, exercise=TRUE, exercise.lines=23}
+#Add your code here
+convert(99635,zip2State) # Should return "Alaska"
+convert("99635",zip2State) # So should this
+```
+
+```{r state-for-setup}
+# The problem must be added to the problem-set in <exercise>-setup
+ps$addProblem("for loop lookup") #Add the exercise to the problem set 
+```
+
+```{r state-for-check}
+# Checker will run original code prior to the check
+ex=ps$getProblem("for loop lookup")
+qid="rvest"
+ex$addQuestion(qid,correct="rvest is loaded",incorrect="rvest is not ",pt.val=1)
+if(safeTry(any(grepl("rvest",search())))){
+  ex$setCorrect(qid)
+}
+
+qid="zip2State"
+ex$addQuestion(qid,correct="data.frame zip2State exists",incorrect="data.frame zip2State does not exist",pt.val=1)
+if(safeTry(class(zip2State)=="data.frame")){
+  ex$setCorrect(qid)
+}
+
+qid="proper columns"
+ex$addQuestion(qid,correct="Proper column names in zip2State",incorrect="Improper column names (or columns) in zip2State",pt.val=2)
+if(safeTry(length(colnames(zip2State)>1) & all(colnames(zip2State)==c("State","ST","Zip.min","Zip.max")))){
+  ex$setCorrect(qid)
+}
+
+
+qid="numeric columns"  #
+ex$addQuestion(qid,correct="Zip.min and Zip.max of mode numeric",incorrect="Zip.min and Zip.max not of mode numeric",pt.val=2)
+if(safeTry(all(sapply(zip2State[,c("Zip.min","Zip.max")],mode)=="numeric"))){
+  ex$setCorrect(qid)
+}
+
+qid="function exists"  #
+ex$addQuestion(qid,correct="Function 'convert' exists",incorrect="function 'convert' does not exist",pt.val=1)
+if(safeTry(exists("convert"))){
+  ex$setCorrect(qid)
+}
+
+
+qid="numberArguments"  
+ex$addQuestion(qid,correct="Correct number of arguments",incorrect="Incorrect number of arguments",pt.val=2)
+if(safeTry({length(names(formals(convert))==2)})){
+  ex$setCorrect(qid)
+}
+
+qid="contains for"  #
+ex$addQuestion(qid,correct="'convert' uses for()",incorrect="'convert' does not use for()",pt.val=1)
+if(safeTry({any(grepl("for",as.character(body(convert))))})){
+  ex$setCorrect(qid)
+}
+
+qid="Check 99635"  #
+ex$addQuestion(qid,correct="numeric 99635 is Alaska",incorrect="numeric 99635 is not Alaska",pt.val=1)
+if(safeTry({convert(99635,zip2State)=="Alaska"})){
+  ex$setCorrect(qid)
+}
+
+qid="Check '99635'"  #
+ex$addQuestion(qid,correct="character 99635 is Alaska",incorrect="character 99635 is not Alaska",pt.val=1)
+if(safeTry({convert('99635',zip2State)=="Alaska"})){
+  ex$setCorrect(qid)
+}
+
+qid="Check 1"  #
+ex$addQuestion(qid,correct="01 produces **NOT FOUND**",incorrect="01 does not produce **NOT FOUND**",pt.val=1)
+if(safeTry({convert(01,zip2State)=="**NOT FOUND**"})){
+  ex$setCorrect(qid)
+}
+
+exercise=ex
+```
+
+
+## The `apply` function
+
+Rewrite the above function to use `apply` and NOT a for loop.  Unfortunately  you *will* need to copy-and-paste the code that prepares the `zip2State` table because each exercise is run in an isolated sandbox.
+
+```{r state-apply, exercise=TRUE, exercise.lines=23}
+#Add your code here
+convert(99635,zip2State) # Should return "Alaska"
+convert("99635",zip2State) # So should this 
+```
+```{r state-apply-setup}
+# The problem must be added to the problem-set in <exercise>-setup
+ps$addProblem("state lookup with apply") #Add the exercise to the problem set 
+```
+
+```{r state-apply-check}
+# Checker will run original code prior to the check
+ex=ps$getProblem("state lookup with apply")
+
+qid="function exists"  #
+ex$addQuestion(qid,correct="Function 'convert' exists",incorrect="function 'convert' does not exist",pt.val=1)
+if(exists("convert")){
+  ex$setCorrect(qid)
+}
+
+qid="numberArguments"  #Function arguments should be x, y, and z (in that order):
+ex$addQuestion(qid,correct="Correct number of arguments",incorrect="Incorrect number of arguments",pt.val=2)
+if(safeTry({length(names(formals(convert))==2)})){
+  ex$setCorrect(qid)
+}
+
+qid="contains apply"  #
+ex$addQuestion(qid,correct="'convert' uses apply()",incorrect="'convert' does not use apply()",pt.val=1)
+if(safeTry({any(grepl("apply",as.character(body(convert))))})){
+  ex$setCorrect(qid)
+}
+
+qid="Check 99635"  #
+ex$addQuestion(qid,correct="numeric 99635 is Alaska",incorrect="numeric 99635 is not Alaska",pt.val=1)
+if(safeTry({convert(99635,zip2State)=="Alaska"})){
+  ex$setCorrect(qid)
+}
+
+qid="Check '99635'"  #
+ex$addQuestion(qid,correct="character 99635 is Alaska",incorrect="character 99635 is not Alaska",pt.val=1)
+if(safeTry({convert('99635',zip2State)=="Alaska"})){
+  ex$setCorrect(qid)
+}
+
+qid="Check 1"  #
+ex$addQuestion(qid,correct="01 produces **NOT FOUND**",incorrect="01 does not produce **NOT FOUND**",pt.val=1)
+if(safeTry({convert(01,zip2State)=="**NOT FOUND**"})){
+  ex$setCorrect(qid)
+}
+
+exercise=ex
+```
+
+
+## A `while` loop
+
+Write a function called `three.n.plus.one` that takes a single argument called `n` and uses a `while()` loop to return a numeric vector.  The function should implement the following algorithm:
+
+```
+1. If `n` is not greater than 0 return `NULL` immediately
+2. Round `n` up (just in case `n` is not an integer)
+4. While n is not 1:
+   1. If n is even divide by 2
+   2. Otherwise multiply by 3 and add 1
+5. Return the vector of intermediate values.
+```
+
+**Example one:** ($n=10$)   
+```{r,eval=FALSE}
+three.n.plus.one(10)
+```
+
+Returns
+
+```
+[1] 10  5 16  8  4  2  1
+```
+
+**Example Two:** ($n=10.5$ [secretly this $n=11$ because of the rounding])   
+
+```{r,eval=FALSE}
+three.n.plus.one(10.5)
+```
+
+Returns
+
+```
+[1] 11 34 17 52 26 13 40 20 10  5 16  8  4  2  1
+```
+
+**Example Three:** ($n=1$)   
+
+```{r,eval=FALSE}
+three.n.plus.one(1)
+```
+
+Returns
+
+```
+[1] 1
+```
+
+**Example Four:** ($n=0$)   
+
+```{r,eval=FALSE}
+three.n.plus.one(0)
+```
+
+Returns
+
+```
+NULL
+```
+
+```{r threen, exercise=TRUE, exercise.lines=25}
+#Add your code here
+```
+
+```{r threen-setup}
+# The problem must be added to the problem-set in <exercise>-setup
+ps$addProblem("3n+1") #Add the exercise to the problem set 
+```
+
+```{r threen-check}
+# Checker will run original code prior to the check
+ex=ps$getProblem("3n+1")
+qid="function exists"  #
+ex$addQuestion(qid,correct="Function 'three.n.plus.one' exists",incorrect="function 'three.n.plus.one' does not exist",pt.val=1)
+if(exists("three.n.plus.one")){
+  ex$setCorrect(qid)
+}
+
+qid="contains while"  #
+ex$addQuestion(qid,correct="'three.n.plus.one' uses while()",incorrect="'three.n.plus.one' does not use while()",pt.val=1)
+if(safeTry({any(grepl("while",as.character(body(three.n.plus.one))))})){
+  ex$setCorrect(qid)
+}
+
+qid="argumentValues"  #Function arguments should be n:
+ex$addQuestion(qid,correct="Correct argument names",incorrect="Incorrect argument names",pt.val=1)
+if(safeTry({all(names(formals(three.n.plus.one))==c("n"))})){
+  ex$setCorrect(qid)
+}
+
+qid="Check 10"  #
+ex$addQuestion(qid,correct="Input 10 generates proper output",incorrect="Input 10 does not generate proper output",pt.val=4)
+if(safeTry({all(three.n.plus.one(10)==c(10,5,16,8,4,2,1))})){
+  ex$setCorrect(qid)
+}
+
+qid="Check 10.5"  #
+ex$addQuestion(qid,correct="Input 10.5 generates proper output",incorrect="Input 10.5 does not generate proper output",pt.val=4)
+if(safeTry({all(three.n.plus.one(10.5)==c(11,34,17,52,26,13,40,20,10,5,16,8,4,2,1))})){
+  ex$setCorrect(qid)
+}
+
+qid="Check 0"  #
+ex$addQuestion(qid,correct="Input 0 generates proper output",incorrect="Input 0 does not generate proper output",pt.val=1)
+if(safeTry({is.null(three.n.plus.one(0))})){
+  ex$setCorrect(qid)
+}
+
+qid="Check 1"  #
+ex$addQuestion(qid,correct="Input 1 generates proper output",incorrect="Input 1 does not generate proper output",pt.val=1)
+if(safeTry({all(three.n.plus.one(1)==c(1))})){
+  ex$setCorrect(qid)
+}
+
+exercise=ex
+```

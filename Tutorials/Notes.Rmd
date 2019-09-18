@@ -1,0 +1,88 @@
+---
+title: "basicR Answers"
+author: "Peter Dolan"
+date: "9/13/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+Geometric Mean:
+
+```{r}
+geom.mean.3<-function(x=1,y=1,z=1){
+  sign(x*y*z)*abs(x*y*z)^(1/3)
+}
+```
+
+Parity:
+```{r}
+parity=function(n){
+  if(n%%2==0){return("even")} else { return("odd")}
+}
+```
+
+Reading the table 
+```{r}
+library(rvest)
+url<-"http://www.structnet.com/instructions/zip_min_max_by_state.html"
+url %>% read_html() %>% html_nodes(xpath='//table') %>% html_table() -> zip2State
+zip2State<-zip2State[[1]]
+zip2State=zip2State[-1]
+colnames(zip2State)=c("State","ST","Zip.min","Zip.max")
+zip2State$Zip.min=as.numeric(zip2State$Zip.min) #Technically not needed-- they import as integers
+zip2State$Zip.max=as.numeric(zip2State$Zip.max)
+
+convert=function(zip,table){
+  zip=as.numeric(zip)
+  for(row in 1:nrow(table)){
+      if(zip>=table$Zip.min[row] & zip <= table$Zip.max[row]){
+          return(table$State[row])
+      }
+  }
+  return("**NOT FOUND**")    
+}
+
+convert(99635,zip2State)
+convert("001",zip2State)
+```
+
+Table converstion (apply)
+```{r}
+library(rvest)
+url<-"http://www.structnet.com/instructions/zip_min_max_by_state.html"
+url %>% read_html() %>% html_nodes(xpath='//table') %>% html_table() -> zip2State
+zip2State<-zip2State[[1]]
+zip2State=zip2State[-1]
+colnames(zip2State)=c("State","ST","Zip.min","Zip.max")
+
+convert=function(zip,table){
+    zip=as.numeric(zip)
+    results<-apply(table,1,function(r){(r["Zip.min"]<=zip & r["Zip.max"]>=zip)})
+    answers<-zip2State$State[results]
+    if(length(answers)==0){return("**NOT**")}
+    return(answers)
+}
+
+convert("99635",zip2State)
+
+convert(99635,zip2State)
+convert("001",zip2State)
+```
+
+
+Three.n.plus.one
+```{r}
+three.n.plus.one=function(n){
+    if(n<=0){return(c())}
+    n=ceiling(n)
+    results=n
+    while(n!=1){
+        if(n%%2==0){n=n/2}
+        else {n=3*n+1}
+        results=c(results,n)
+    }
+    return(results)
+}
+```

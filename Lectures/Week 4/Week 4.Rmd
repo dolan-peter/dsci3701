@@ -1,0 +1,1058 @@
+---
+title: "Introduction to Python"
+author: "Peter Dolan"
+date: "9/15/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(reticulate)
+use_python("/home/dolanp/.virtualenvs/r-reticulate/bin/python",required=TRUE)
+matplotlib<-import("matplotlib")
+matplotlib$use("Agg",force=TRUE) #Enable the matplotlib rendering engine.
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Python and R
+
+One of the *other* most popular languages in data science is Python.  We are primarily going to focus on R in this class, but you should have a basic familiarity with Python in case you end up needing to transition to using it.
+
+The first version of Python was written by Guido van Rossum.  See [the Wikipedia article](https://en.wikipedia.org/wiki/Python_(programming_language)) for details.  Important for you is the distinction between Python 2.x and Python 3.x.  Python 2.7 was probably the most popular of the revisions in Python 2.x and has a huge code-base.  Python 3 is NOT completely back compatible with Python 2.x so there is a good chance that if you're looking up code examples online for Python you'll find something that doesn't quite work the way that you expect.  A word of warning:  `umm-rstudio2.morris.umn.edu` uses `Python 2.7.15` by default, but the JupyterHub server I installed uses one of the Python 3.x interpreters so there will definitely be differences in how things run.
+
+I think the language does an excellent job being readable-- it looks very much like pseudo-code and uses indention rather than curly braces to indicate code blocks.  The language has a motto "there should be one--and preverably onle one-- obvious way to do it" (this is very different from R).
+
+Python can be run via RMarkdown if the following conditions are satisfied:
+
+* Python is installed (and correctly configured) on the RStudio server
+* The library `reticulate` is installed on RStudio server
+
+Since you are, primarily, running RStudio on the university VM, you are good to go.  And all that you need to do is make a code block with `{python}` instead of `{r}`.  
+
+Here's an example:
+
+```{python}
+2+2
+```
+
+You can tell that the output is using a different code-engine because R would report this as 
+
+```{r}
+2+2
+```
+
+The down-side to using `{python}` code-blocks is the lack of interactivity.  For interactivity:
+
+* You can go to the terminal and type python (use `quit()` to exit)
+* Go to the Console, ensure that the `reticulate` library is loaded and use  the function `repl_python()` to start a python session in the console
+* Go to the JupyterHub Server I set up and work there.
+
+One of the cooler things about `repl_python()` is that `R` objects can be accessed using the `r` object.  You should try this now:
+
+1. In the console assign 1337 to the variable a: `a<-1337`
+2. Start the Python loop: `repl_python()`
+3. Access the r value and add 3 to it: `r.a + 3`
+4. Assign that to the variable b: `b=r.a+3`
+5. Look at the value of b: `b`
+6. Quit the REPL: `quit`
+
+Any objects that you produce in python are then available back in R via `py$<variable>`.  
+
+1. Try typing `py$b`
+
+These sessions are persistant-- in other words you can go back and forth between them and they remember the changes you made.  For example, change the python variable b to 100:
+
+1. `py$b=100`
+2.  Restart the python REPL: `python_repl()`
+3. Check the value: `b`
+4. Quit again `quit`
+
+As long as you have `library(reticulate)` in the **setup chunk** of your RMarkdown file you can do the same thing in your RMarkdown file:
+
+Here's an R chunk where assign the value of 100 to `a`:
+
+```{r}
+#R code chunk
+a<-100
+a
+```
+
+---
+
+Now in Python we'll add 1000 to that value. Assign the results to the variable `b` and change the R variable `a` to 10:
+
+```{python}
+#Python code chunk
+b=r.a+1000
+b
+r.a=-10
+```
+
+---
+
+We will verify that R can see Python's variables using `py`, that R's variable was changed, **and** we'll change the python variable `b` to -20:
+```{r}
+#R code chunk
+py$b
+a
+py$b=-20
+```
+
+---
+Finally we'll verify that python can see the changes:
+
+```{python}
+#Python code chunk
+b
+```
+
+---
+
+So now you can use BOTH R and Python and pass information back and forth between the two languages in a very straightforward fashion.
+
+There is also a function called `source_python()` that will let you run Python code (in a file) from R.  It works the same way as `source()` in R, but runs Python code.  It ensures that the objects in the run-time environment are visible through `py`.  (Similar to what we saw above)
+
+[The reticulate web page](https://rstudio.github.io/reticulate) has many, many good vignettes explaining what can be done.
+
+## Timing Concerns
+
+We use a fairly straightforward function in R that is very inefficient:
+
+```{r}
+Number.of.divisors=function(n){
+  n=abs(floor(as.integer(n)))
+  if(n==0){return(Inf)}
+  count=0
+  for(d in 1:n){ #This is terribly inefficient
+    if(n%%d==0){count=count+1}
+  }
+  return(count)
+}
+```
+
+This will count the number of number of divisors for a given integer $n$.
+
+We will call it multiple times using `for`, `sapply` and `while` to get a sense of the timing:
+
+```{r}
+n=1000
+n=1000 #n=10000
+system.time({
+  results=vector("integer",n)
+  for(i in 1:n){
+     results[i]=Number.of.divisors(i)
+  }
+})
+
+system.time({
+  results=sapply(1:n,Number.of.divisors)
+})
+
+system.time({
+  results=vector("integer",n)
+  i=1
+  while(i<=n){
+    results[i]=Number.of.divisors(i)
+    i=i+1
+  }
+})
+plot(results)
+plot(table(results))
+```
+
+On `umm-rstudio2.morris.umn.edu` I ran this for three values of $n$ and measured the time in seconds:
+
+|            | n=1,000   | n=10,000  | n=100,000
+|------------|-----------|-----------|--------
+|for loop    | 0.118     | 11.404    | 1247.369
+|sapply      | 0.127     | 11.164    | 1463.231
+|while loop  | 0.137     | 11.553    | 1109.421
+
+We wee that the run-time's are fairly similar-- although the `while` loop seems to show more improvement at large values of $n$.
+
+### Modeling run-time
+
+In class I broke you up into small and groups and asked you to model the run-time-- ignoring the method. Below are some attempts to see what tranformations on $x=n$ and $y=\textrm{run time}$ made analysis simple:
+
+```{r}
+x=c(rep(1000,3),rep(10000,3),rep(100000,3))
+y=c(0.118,0.127,0.137,11.404,11.164,11.553,1247.369,1463.231,1109.421)
+plot(x,y)
+x.log=log10(x)
+y.log=log10(y)
+plot(x,y.log)
+plot(x.log,y.log)
+plot(x.log,y.log) #the Best
+
+model<-lm(y.log~x.log)
+abline(model)
+summary(model)
+```
+
+From the summary we see that 
+
+$$
+\log_{10}(y) = -6.90862 + 1.99900\log_{10}(x)
+$$
+Applying $\lambda \mapsto 10^\lambda$ to both sides of the equation, rounding and simplifying:
+
+$$
+y=\frac{1}{10,000,000}x^2
+$$
+
+From this we see that the run-time of the equation scales quadratically-- this is in keeping with a more thorough analysis.
+
+### Bringing in Python
+
+Now we bring in Python and do some timing:
+
+```{python}
+import math
+from timeit import default_timer as timer
+def numberOfDivisors(n):
+    n=abs(int(n))
+    if n==0:
+       return math.inf
+    count=0
+    for d in range(1,n):
+      if n%d == 0:
+        count=count+1
+    return count
+    
+numberOfDivisors(100)
+n=1000
+start=timer()
+results=[0 for x in range(n)]
+for i in range(1,n):
+  results[i-1]=numberOfDivisors(i)
+end=timer()
+print(end-start)
+```
+
+Running the same function in Python for the same values of $n$ **on the same virtual machine** (the value produced above will be different because this is not being knitted on umm-rstudio2):
+
+|          | 1,000   | 10,000  | 100,000   |
+|----------|---------|---------|-----------|
+|Python    | 0.06101 | 3.38664 | 331.35065 |
+
+Let's compare.
+
+```{r}
+plot(x.log,y.log,ylim=c(-2,3)) 
+abline(model)
+points(3:5,log10(c(0.06101,3.38664,331.35064)),col="blue",cex=2,pch=20)
+```
+
+We actually see similar scaling, but the slope of the line is a bit different.
+
+## Python Configuration
+
+A computer can have multiple versions of Python installed.  There are also a myriad of ways in which packages can be updated **and** different configurations can be made to coexist on the same computer (things like **virtual environments**).  Read [this excellent blog post](https://opensource.com/article/19/4/managing-python-packages) on managing python packages.  Be prepared to ask questions about it in class on Wednesday.  I am not an expert in configuring Python either so my goal in that conversation is just to ensure that we all have a rough idea of what options are out there.  Key package managers are:
+
+1. The one that comes with your OS and only tangentially are related to Python (Windows .msi files, the `dnf` utility on Fedora linux (or `yum` on older Fedora variants), the `apt` utility on Debian variants of linux, `pacman` on archlinux variants and `brew` (which is kinda-sorta official on Mac)
+1. The `pip` utility
+1. The `conda` utility
+
+Each version of python can also have multiple `conda` environments and multple virtual environments.  For your own personal use you might be using a number of these, but in many real-world situations somebody else will be in charge of maintaining yoru environment.
+
+For us, we will use the `py_discover_config()` utility in `reticulate` to discover what RStudio can figure out about installed python versions:
+
+```{r,eval=FALSE}
+py_discover_config()
+```
+
+This is what I observed:
+
+```
+python:         /usr/bin/python
+libpython:      /usr/lib64/python2.7/config/libpython2.7.so
+pythonhome:     /usr:/usr
+version:        2.7.15 (default, Oct 15 2018, 15:24:06)  [GCC 8.1.1 20180712 (Red Hat 8.1.1-5)]
+numpy:          /usr/lib64/python2.7/site-packages/numpy
+numpy_version:  1.14.5
+
+python versions found: 
+ /usr/bin/python
+ /usr/bin/python3
+```
+
+We see that the current default configuration is 2.7.15, but there **is** a python3 version installed (see above).
+
+To switch to that version of Python we'll need to use the following command:  `use_python("/usr/bin/python3",required=TRUE)`.  If we want to use that version of Python in the console we'll need to restart R, but it's not a big deal if we do this in our setup chunk at the beginning of an RMarkdown file.
+
+When my startup block looks like this:
+
+```{r eval=FALSE}
+library(reticulate)
+use_python("/usr/bin/python3",required=TRUE)
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Then I see something different when I run `py_discover_config`:
+
+```{r,eval=FALSE}
+py_discover_config()
+```
+
+```
+## python:         /usr/bin/python3
+## libpython:      /usr/lib64/libpython3.6m.so.1.0
+## pythonhome:     /usr:/usr
+## version:        3.6.8 (default, Mar 21 2019, 10:08:12)  [GCC 8.3.1 20190223 (Red Hat 8.3.1-2)]
+## numpy:           [NOT FOUND]
+## 
+## NOTE: Python version was forced by use_python function
+```
+
+So you can force RMarkdown to use either version of Python... **however** we do NOT have numpy installed on umm-rstudio2.morris.umn.edu.  And we really do want it... so here's how I would install it:
+
+```{r,eval=FALSE}
+py_install("numpy")
+```
+
+Here is what I observed:
+
+```
+> py_install("numpy")
+Creating virtual environment '~/.virtualenvs/r-reticulate' ...
+Using python: /usr/bin/python3.6
+Collecting pip
+  Cache entry deserialization failed, entry ignored
+  Downloading https://files.pythonhosted.org/packages/30/db/9e38760b32e3e7f40cce46dd5fb107b8c73840df38f0046d8e6514e675a1/pip-19.2.3-py2.py3-none-any.whl (1.4MB)
+Collecting wheel
+  Downloading https://files.pythonhosted.org/packages/00/83/b4a77d044e78ad1a45610eb88f745be2fd2c6d658f9798a15e384b7d57c9/wheel-0.33.6-py2.py3-none-any.whl
+Collecting setuptools
+  Downloading https://files.pythonhosted.org/packages/b2/86/095d2f7829badc207c893dd4ac767e871f6cd547145df797ea26baea4e2e/setuptools-41.2.0-py2.py3-none-any.whl (576kB)
+Installing collected packages: pip, wheel, setuptools
+Successfully installed pip-19.2.3 setuptools-41.2.0 wheel-0.33.6
+Using virtual environment '~/.virtualenvs/r-reticulate' ...
+Collecting numpy
+  Downloading https://files.pythonhosted.org/packages/e5/e6/c3fdc53aed9fa19d6ff3abf97dfad768ae3afce1b7431f7500000816bda5/numpy-1.17.2-cp36-cp36m-manylinux1_x86_64.whl (20.4MB)
+Installing collected packages: numpy
+Successfully installed numpy-1.17.2
+```
+
+This produces a new virtual environment:
+
+```{r,eval=FALSE}
+py_discover_config()
+```
+
+```
+> py_discover_config()
+python:         /home/dolanp/.virtualenvs/r-reticulate/bin/python
+libpython:      /usr/lib64/libpython3.6m.so.1.0
+pythonhome:     /usr:/usr
+version:        3.6.8 (default, Mar 21 2019, 10:08:12)  [GCC 8.3.1 20190223 (Red Hat 8.3.1-2)]
+numpy:          /home/dolanp/.virtualenvs/r-reticulate/lib64/python3.6/site-packages/numpy
+numpy_version:  1.17.2
+
+python versions found: 
+ /home/dolanp/.virtualenvs/r-reticulate/bin/python
+ /usr/bin/python
+ /usr/bin/python3
+```
+
+HOWEVER!  `numpy` will not be found if I try to use it in RMarkdown with the default header.  I need to change my `setup` block to look like this:
+
+```{r eval=FALSE}
+library(reticulate)
+use_python("/home/dolanp/.virtualenvs/r-reticulate/bin/python",required=TRUE)
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+**NOW** I get the following configuration:
+
+```{r}
+py_discover_config()
+```
+
+All is well.  
+
+## Recap
+
+* The R library `reticulate` allows R sessions and python sessions to share their objects pretty seamlessly
+* The `repl_python()` function switches to python in the RStudio console
+* `source_python()` allows python code (stored in files) to be run from R
+* `py_discover_config()` and `use_python("<dir>",required=TRUE)` allow different versions of Python and different environments to be used both in the console and in RMarkdown.
+
+# Comparing R and Python
+
+Both R and Python can use positional **and** keyword arguments
+
+<!--NOTE:  look into using `doctest`-->
+
+## White Space vs Braces
+Languages whose pedigree extend back to C use braces:  `{` and `}` to indicate the start and stop of code blocks (languages descending from PASCAL tend to use `BEGIN` and `END`.)  Python does this with indentation.
+
+## Defining Functions
+
+Both R and Python allow functions with arguments that can be 
+
+* Required
+* specified by keyword
+* specified by position
+* have default values
+
+### Defining Functions in R
+In R functions are defined using the `function(<args>){<body>}` notation.  It produces a script that can be bound to any variable and executed using the `f(<args>)` construction:
+
+```{r}
+addOne=function(a,b){a+b+1}
+addOne(2,3)
+```
+
+In R **every** expression has a value... so functions can be used without being given a name (this is called **an anonymous function**)
+
+```{R}
+(function(a,b){a+b+1})(2,3)
+```
+The parenthesis are necessary.
+
+The value of the function either comes from an explicit `return()` or it is the value of the last expression executed in the function.
+
+### Defining Functions in Python
+In Python functions are **defined** and not, usually, assigned.  They **must** end in a `return` expression.  (In R, this is optional-- the value of the executed function is the last line executed in the function.)
+
+```{python}
+def addOne (a,b):
+    return a+b+1
+
+addOne(2,3)
+```
+
+Python also allows anonymous functions, but they use a different notation:
+
+```{python}
+addOne=lambda a,b: a+b+1
+addOne(2,3)
+```
+
+## Libraries
+
+Both R and Python allow external code to be loaded in a variety of ways
+
+In **R**, external code can be loaded using:
+
+* `source()`
+* `load()`
+* `library()`
+* `require()`
+
+In **Python** (notebooks) we use
+
+* `%run()`
+* `import <library> AS <var>`
+* `import <library>`
+* `from <library> import <componenets>
+
+If we want to load a Python library **from R** we use `py_install("matplotlib")` (for example)
+<!-- Consider adding examples -->
+
+## Operations
+
+Both languages understand the basic numeric operations (and they behave with the expected order of operations)
+
+* `+`
+* `-`
+* `*`
+* `\`
+
+Both languages have similar comparisons:
+
+* `<`, `<=`
+* `>`, `>=`
+* `==`, `!=`
+
+
+Operation      |   R     |  Python   
+---------------|---------|----------
+Exponentiation | `^`     | `**`
+Bound to same address | NA | `is` vs `is not`
+integer devision| `floor (a/b)` | a//b
+logical AND  | `&&` (note:  Only looks at first elt in a vector) | `&`
+logical OR  | `||` (note:  Only looks at first elt in a vector) | `|`
+
+### Special expressions
+
+R:
+
+* `NA`
+* `NULL`
+* `Inf`
+* `NaN`
+* `TRUE`
+* `FALSE`
+
+Python:
+
+* `none`
+* `True`
+* `False`
+
+## Data Types
+
+Python:
+ * Scalar types
+    * numeric (`int` and `float`)
+    * strings (triple quotes for multiline striangs: ''' or """")
+    * booleans
+    * dates
+    * times
+
+Convert to strings
+
+in R: as.character()
+in Python str(var)
+
+### Strings
+
+Both languages use *escaping*, single quotes, and double quotes.
+
+Python has a triple quote multi-line construction.
+
+In Python, converting a string to a list produces an array of the characters:
+
+```{python}
+list("Data Science")
+```
+
+Concatenating in R is done with `paste0()`.  In Python the `+` operator works as concatenation on two strings:
+
+```{python}
+"Peter" + " " + "Dolan"
+```
+
+R has a myriad of internal representations for strings-- which can, to some extent, be detected and manipulating using the `Encoding` and `Encoding->` functions.  Please read [this article](https://kevinushey.github.io/blog/2018/02/21/string-encoding-and-r/) for a good overview of this information and a reminder about the intricacies of character encoding.
+
+Python on the other hand always uses unicode for its encoding.  It can convert strings easily between strings and lists (what we think of as arrays or vectors).  Subsetting functions work... but strings are immutable in Python-- you can't assign a subset of the string a new value and expect that the string will change.
+
+operation   |        R        | Python
+------------|-----------------|-----------
+subset      | `substr()`      | str[<range>]
+
+r"" construction in Python
+b'' construction for raw bytes
+Page 52 UTF vs ASCII and some encoding changing characters
+FORMAT (pg 53 ish)
+
+### Booleans
+
+TRUE/FALSE vs True/False
+
+### Date/Time Types
+
+In R we need to use the `Date()` object constructor (or something from the package `lubridate`)
+
+## Type casting
+
+None vs NULL and need to use `is` none (compare to is.null(var) in R)
+## Flow control
+
+White space vs brackets
+
+R             |  Python
+--------------|---------------
+if/else       | if/elif/else
+for(<var> in <sequence>)         | for <var> in <sequence>:
+while(<cond>) | while <cond>:
+
+###Ternary operator
+ifelse(a,if-expr,else-expr) in R
+<value>=<true-expr> if <condition> else <false-expr>
+
+
+### simple sequences
+
+* in R: `a:b`
+* in Python 2.x `range(a,b+1)` # NOTE:  In a 0-indexed language like python range(0,n) will iterate over ALL indices in a vector of length $n$.   
+* in Python 3.x `list(range(a,b+1))`   
+* in R: `seq(a,b,step=s)`
+* in Python 2.x: `range(a,b+1,s)`
+* in Python 3.x: `list(range(a,b+1,s))`
+
+We do have to be careful however. In Python 2.x `range()` generates a **list**.  In Python 3.x it generates an **iterator**.  We can force the iterator to be a list using `list(range(a,b))`.  Iterators OFTEN act like a list-- but they are more memory efficient and NOT made in their entirety in advance.  Think about iterating over one million values:  `1:1000000`.  In R the for-loop `for (i in 1:1000000)` actually needs to produce a vector with one million entries... but in Python 2.x `for i in range(1000000)` a list of one million values is generated-- just like in R.  In Pyton 3.x such a list is **NOT** generated.  Instead, everytime the **next** element is requested the **iterator** knows to increase the value of `i` by 1 (and to stop at one million).
+
+## Data Structures
+
+### Tuples
+
+non-modifiable (unumutable) sequences of Python **objects**.  Conceptually similar to R's `list`. Both allow for nested structures and can contain objects of differing data types.
+
+In Python:
+```{python}
+example=3,4,'a'
+example2=(3,4,('a',10),4)
+
+example2[2] # Remember Python is 0-based
+```
+
+Notice that Python expresses the **tuple** by surrounding it in parenthesis.
+
+In R:
+```{r}
+example=list(3,4,'a')
+example2=list(3,4,list('a',10),4)
+example2[[3]] #Recall differences in [] vs [[]]
+```
+
+Notice that in R the elements are shown using the notation for how they would be accessed.
+
+**EXERCISE**
+
+Tuples themselves are immutable, but they may contain mutable items which **can** be changed in place:
+
+in Python:
+```{python}
+example=(1,2,3,['a','b','c'])
+example[3].append('d')
+example[3][1]='NEW'
+example
+```
+
+Tuples can be concatenated using `+` in Python.  In R you would use `c()` to concatenate two lists...
+
+In Python:
+```{python}
+example=(1,2,3,['a','b','c'])
+example2 = (10,20,('a',2),4)
+example+example2
+```
+
+In R:
+```{R}
+example=list(1,2,3,c('a','b','c'))
+example2 = list(10,20,list('a',2),4)
+c(example,example2)
+```
+### Unpacking
+Unlike R, Python allows tuples to be used to perform multiple variable assignments in a single, simple equation.
+
+For example
+```{python}
+tup=(48,'Peter','Dolan')
+(age,first,last)=tup
+first+" " + last
+```
+That Python expression assigned 48 to `age`, 'Peter' to `first` and 'Dolan' to `last`.
+
+R does not do this... but R does something a *bit* similar with vectors (see below for a refresh):
+
+```{r}
+example=1:10
+example[2:3]=c(-2,-3)
+example
+```
+
+So here the 2 element subset of `example` is replaced with the 2 element array `c(-2,-3)`.
+
+Remember that R uses **recycling**:
+```{r}
+example=1:10
+example[2:3]=-2
+example
+```
+
+##Arrays (list and vectors)
+
+In R arrays are 1-based.  In Python they are 0-based.  This means that in R `array[1]` is the **first** element and in Python `array[0]` is the **first** element.  In R, the datatype for an array is called a `vector`.  All elements must be fo the same data type.  R will automatically convert elements (when it can) to be of an appropriate type when added (or modified) to an existing vector.  
+
+In Python the closest data type is called a `list` (which means we need to be **very careful** to distinguish between a list in R and a list in Python).  In Python the data type of elements in a list need not be the same so both Python and R use `list` to refer to sequences that can contain different types of elements.  Lists in Python are mutable-- so their contents can be changed in place.
+
+In Python lists and tuples can often be used interchangeably
+
+## Add exercise
+
+In R we generate arrays in many ways (`seq()`, `start:stop`, *output of functions*) but the most common way not involving interactive (or file) input is with `c()`. The `[` and `]` characters are used to create new arrays from the old-- either subsets or,sometimes, longer arrays built out of repeated subarrays:
+
+In R:
+```{r}
+array=c(10,20,19,48,27,13)
+array[2]
+array[-1]
+array[2:3]
+array[c(2,2,1,1,2:4,4:2)]
+```
+
+Note that `c()`, in contrast to `list()`, **flattens**:
+
+```{r}
+c(1:3,3:1)    # A vector with 6 elements
+list(1:3,3:1) # A list with 2 elements
+```
+
+In R the single `[` and `]` retain the data type of the object in question... so when applied to vectors, the result is a vector (note a vector of length 1 is still vector).  When applied to R lists it produces lists.  Also note, that in R a vector is always of the same data type.
+
+In Python, the `[` and `]` are used in a similar fashion but they are **also** used in place of `c()`.
+
+```{python}
+array=[10,20,19,48,27,13]
+array[2]
+array[-1]
+array[2:3]
+#array[c(2,2,1,1,2:4,4:2)]
+```
+
+In Python `array=10,20,19,48,27,13` is syntactically correct, but it generates a *tuple* and **not** a *list*.
+
+### Inserting an element
+
+There's no particularly "nice" way to do this in R.
+
+```{r}
+array=c(10,20,19,48,27,13)
+array=c(array[1:3],'-1',array[4:6]) #Insert -1 at location 4
+array
+```
+
+Python has a an `insert()` method
+
+```{python}
+array=[10,20,19,48,27,13]
+array.insert(3,-1) #Insert -1 at location 4
+array
+```
+
+To remove an element in Python use `pop()`
+```{python}
+array=[10,20,19,48,27,13]
+array.insert(3,-1) #Insert -1 at location 4
+array
+array.pop(4)
+array
+```
+
+Again, in R, there's no particularly nice way to do this:
+
+```{r}
+array=c(10,20,19,48,27,13)
+array=c(array[1:3],'-1',array[4:6]) #Insert -1 at location 4
+array
+array=c(array[1:3],array[5:7])
+array
+```
+
+Python explicilty has an `.append()` method to add a value to the end of an Python list.  R uses `c(old.list,<new elt>)`
+
+In Python `append()` is much more efficient than `.insert()`
+
+### more about removing
+
+Python has the `.remove()` method which allows a list element (or elements) to be removed based upon value instead of index:
+
+```{python,eval=FALSE}
+example=list(range(1,11))+list(range(5,8))
+example.remove(2)
+example
+example.remove(6)
+example
+```
+
+In R (at least in base R) we build a new array that does no longer has the "offending" elements:
+
+```{r}
+example=c(1:10,5:7)
+example=example[example!=2]
+example
+example=example[example!=6]
+```
+## Advanced sorting
+
+Python's list type allows for objects.  The `.sort()` method can be given a **comparator function** that allows two elements to be compared in a sophisticated fashion.  Consider a list of two-element lists.... perhaps each elt in the array is a name and an age:
+
+In Python:
+```{python}
+twoLayered=[["Peter",48],["Heather",35],["Amy",40],["Zet",9]]
+```
+
+We would really like to sort the elements based off the second entry.  The `key=function` keyword argument in `sorting()` allows this to happen in an easy to read fashion (make sure you review the anonymous function `lambda` construction)
+
+```{python}
+twoLayered.sort(key=lambda x:x[1])
+twoLayered
+```
+If you find anonymous functions confusing then it is fine to use the `def` construction:
+
+```{python}
+def secondElt (x):
+    return x[1]
+   
+twoLayered=[["Peter",48],["Heather",35],["Amy",40],["Zet",9]]
+twoLayered.sort(key=secondElt)
+twoLayered
+```
+
+###Indexing (aka splicing)
+
+Feature                   |R                           |       Python
+--------------------------|----------------------------|--------------------
+Postive Numeric index (i) |1-based  (ith elt in array) | 0-based ((i+1)-th elt in array)
+Negative Numeric Index(-i)| removed array[i]           | reference from END of array (end is -1)
+seq (a:b)                 | indices a <= i <= b        | indices a<= i < b
+
+### Concatenating arrays
+
+In Python one can use the `+` operator on two lists or the `.extend()` method:
+
+```{python}
+base=list(range(1,11))+list(range(5,8))+[0]
+newEnding=[10,20,(5,1),3] 
+newEnding # nested structures will be kept in Python
+base+newEnding
+base.extend(newEnding)
+base
+```
+
+In R one would use `c()`:
+
+```{r}
+base=c(1:10,5:7,0)
+newEnding=c(10,20,c(5,1),3) # In R, for vectors, nesting will not be kept and the array is flattened
+newEnding
+base=c(base,newEnding)
+base
+
+base=list(1,2,3,4,5,6,7,8,9,10,5,6,7,0) # Now do it as along list
+newEnding=list(10,20,list(5,1),3)
+newEnding
+base=c(base,newEnding) #new list formed by concatenating the two old ones
+base
+```
+
+###Sorting arrays
+
+Python has a `.sort()` method which sorts a list in place (but not a tuple):
+
+```{python}
+example=[10,20,5,1,3] 
+example.sort()
+example
+```
+
+Note, that Python 2.x is fine sorting a list with integers and tuples, but Python 3.x is not.  The following would work in Python 2.x but fails in Python 3.x:
+
+```{python,eval=FALSE}
+example=list(10,20,list(5,1),3)
+sort(example)
+```
+
+In R we use `sort()`, but only on vectors:
+
+```{r}
+example=c(10,20,5,1,3)
+sort(example)
+```
+
+The following would generate an error in R if wwas attempted:
+
+```{r,eval=FALSE}
+example=list(10,20,5,1,3)
+sort(example)
+```
+
+But, because of flattening, this does work:
+
+```{r}
+example=c(10,20,c(5,1),3)
+sort(example)
+```
+
+## Associative arrays
+
+Consider the following table:
+
+Name    | age
+--------|------
+Peter   | 48
+Heather | 35
+Amy     | 40 
+Zet     | 11
+
+We can determine that Amy's age is 40 by *looking up Amy*
+
+This is the essence of an associative array.  In R we build a list (or vector) with **named values** or we add a `names()` attribute:
+
+```{r}
+age.lookup<-c(Peter=48,Heather=35,Amy=40,Zet=11) # Method 1
+age.lookup["Peter"]
+age.lookup=c(48,35,40,11) # Method 2
+names(age.lookup)=c("Peter","Heather","Amy","Zet")
+age.lookup["Peter"]
+```
+
+In Python we use a **dict** data-type.  The syntax is very similar to JSON:
+
+```{python}
+ageLookup={'Peter': 48, 'Heather': 35, 'Amy': 40, 'Zet': 11}
+ageLookup["Peter"]
+```
+
+IMMUTABLE DISCUSSION
+sorted()
+ 
+## SETS
+
+
+##Reference vs Value
+
+Even if you are a computer science person you might not think about the meaning behind expressions such as:
+
+* `a<-3` in R
+* `a=3` in Python
+
+On some level the interpretor has to decide what the `3` is, how to represent it as a bit pattern, and how to **bind** the variable `a` to the corresponding bit pattern.
+
+Now consider two variables `a` and `b`.  Assume `a` containst he value 3.  Consider the following:
+
+* `b<-a` (in R)
+* `b=a` (in Python)
+
+Are these doing the same thing?  Surprisingly the answer is sometimes NO!
+
+In R the **assignment** operator will make a **copy** of the bit pattern somewhere else in RAM and bind the symbol `a` to that value.  Python does the same thing for **primitive data types**.  
+
+However, for objects:
+
+* R copies the value of objects
+* Python makes references to objects
+
+In other words, for objects, the **assignment** operator in Python will bind the symbol `a` **to the same memory location** as `b`.
+
+Let's see what this means in R:
+
+```{r}
+a<-c(3,4)
+b<-a
+a[1]=2 #first element of a is changed to 2
+b
+```
+
+And now in Python:
+
+```{python}
+a=[3,4]
+b=a
+a[0]=2 #first element of a is changed to 2
+b
+```
+
+Notice that in R the value of the variable `b` remains unchanged.   In Python the value of the variable `b` has changed.  
+
+Reread what I wrote above and pay special attention to the word **bind**.  Ultimately all variables are **bound** to a physical memory address somewhere in the computer.  If multiple expressions, ultimately, refer to the same region of memory then any change to that region of memory will influence **all** those expressions with the same reference.
+
+When dealing with large datasets it is much more efficient to use Python's approach.  However, it is much easier for unforeseen side-effects to take place.  The two approaches require the programer to pay attention to detail in different ways.
+
+```{r}
+(a<-c(1,2,3))
+append=function(x,n){
+  x<-c(x,n)
+}
+append(a,-10)
+a
+```
+
+```{python}
+a=[1,2,3]
+a
+def append(x,n):
+    x=x.append(n)
+    return(x)
+
+append(a,-10)
+a
+```
+
+### Dynamic References
+
+IN both R and Python there is no need to define the **data type** of a variable-- it is handled automatically and changes as necessary:
+
+R:
+```{r}
+a=3
+typeof(a)
+a="3"
+typeof(a)
+```
+
+Python:
+```{python}
+a=3
+type(a)
+a="3"
+type(a)
+```
+
+**Type conversion** is looser in R than it is in Python.
+
+R:
+```{r}
+a=c(3)
+c(a,"4")
+```
+
+Python (this is not executed because it would generate an error):
+```{python,eval=FALSE}
+a=[3]
+a.append["4"]
+```
+![Error adding string to end of numeric array](PythonTypeCastError.png)
+
+### Attributes
+
+Both R and Python allow attributes to be associated to a variable.  But in very different ways.  
+
+In Python, an attribute is a function associated to an object (you may have seen this terminology and behavior in other langauges).  Typically in an object is created using a syntax that we'll discuss later, and the member variable is accessed using the `obj.attr` notation.  We won't go too deeply int that just quite yet.
+
+On the other hand, in R, attributes are, typically, meta-data associated to a variable.  They can be added or removed as desired.
+
+Python has a particularly nice `docstring` (stored as the `__doc__` attribute) that makes it easy to document a function.  Here's an example:
+
+```{python}
+def myFunction(x):
+    """
+    Does not really do anything... just here for example
+    
+    Returns
+    ---------
+    the_value: type of arguments
+    """
+    return x
+    
+myFunction(3)
+print(myFunction.__doc__)
+```
+
+R uses the `attr(obj,"attr")` expression which can be used both to *get* the value of the attribute and to *set* it:
+
+```{r}
+my.sequence=1:10
+attr(my.sequence,"note")="DSci Example"
+attr(my.sequence,"note")
+```
+
+Setting an attribut to `NULL` removes it from the variable.
+
+## A Python example:
+
+```{python}
+import matplotlib.pyplot as plt
+def looper ( n ):
+  "This calculates the 3n+1 loop"
+  n=int(n)  
+  if n < 0:
+    raise ValueError('n should be greater than 0')
+  loop = [n]
+  while (n!=1):
+    if (n%2==0):
+      n=int(n/2) #ensure it remains an integer
+    else:
+      n=3*n+1
+    loop.append(n)
+  return(loop)
+looper(3)
+results=list(map(lambda n: len(looper(n)),list(range(1,1000))))
+plt.plot(range(1,1000),results,'ro')
+```
+
+
+
+<!--https://docs.microsoft.com/en-us/azure/devops/pipelines/create-first-pipeline?view=azure-devops&tabs=tfs-2018-2-->

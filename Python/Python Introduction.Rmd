@@ -58,7 +58,7 @@ addOne=lambda a,b: a+b+1
 addOne(2,3)
 ```
 
-## TYpes of arguments
+## Types of arguments
 
 Both R and Python allow functions with arguments that can be 
 
@@ -159,7 +159,7 @@ Concatenating in R is done with `paste0()`.  In Python the `+` operator works as
 "Peter" + " " + "Dolan"
 ```
 
-R has a myriad of internal representations for strings-- which can, to some extent, be detected and manipulating using the `Encoding` and `Encoding->` functions.  Please read https://kevinushey.github.io/blog/2018/02/21/string-encoding-and-r/ for a good overview of this information and a reminder about the intricacies of character encoding.
+R has a myriad of internal representations for strings-- which can, to some extent, be detected and manipulating using the `Encoding` and `Encoding->` functions.  Please read [this article](https://kevinushey.github.io/blog/2018/02/21/string-encoding-and-r/) for a good overview of this information and a reminder about the intricacies of character encoding.
 
 Python on the other hand always uses unicode for its encoding.  It can convert strings easily between strings and lists (what we think of as arrays or vectors).  Subsetting functions work... but strings are immutable in Python-- you can't assign a subset of the string a new value and expect that the string will change.
 

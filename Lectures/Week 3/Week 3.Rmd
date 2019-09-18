@@ -89,7 +89,333 @@ my.subtraction(10)
 
 In the function call `my.subtraction(10)` no naming was used, so the values are assigned by order.  Hence `x` is given the value of 10.  There is no value specified for `y`, but it has a default value of `5`, so that is the value that it receives.
 
+# Basic R data types
+
+* Everything **evaluates** to a value
+* Everything is an object
+
+## vector
+Most fundamental data type is a **vector**:
+
+* numeric
+* character
+* logical
+* factor
+
+We usually build vectors using `c()`, or the sequence operator `:`
+
 ```{r}
+c(10,20,40)
+1:3
+c("bob","anna","bob")
+```
+
+vectors can have the `names` attribute.  Either upon construction or added later:
+
+```{r}
+mv=c(x=10,y=20,z=30)
+mv
+mv=c(10,20,30)
+names(mv)=c("x","y","z")
+```
+
+### subsetting vector elements
+
+We typically use the `[]` operator.  
+
+* vector of positive integers
+* vector of logical values
+* vector of character values
+
+```{r}
+mv>=20
+indices=mv>=20
+indices
+mv[indices]
+
+mv[2]
+mv[c(2,3)]
+mv[-2]
+mv[c("x","y")]
+```
+
+### Using named vectors to make **lookup tables** (hashes)
+
+```{r}
+set.seed(1234)
+x=runif(100)
+cat=cut(x,3,labels=c("low","medium","high"))
+cat2color=c(low="green",medium="yellow",high="red")
+oldpar=par(bg = 'gray')
+plot(x,col=cat2color[cat],pch=20,cex=1.5)
+par(oldpar)
+```
+
+### Recycling
+
+recycling is done when possible, be it for numeric operations or for indexing:
+
+```{r}
+mv=1:10
+mv
+mv+1
+mv+c(1,2)
+mv+c(0,10,100) #warning... but still works:
+mv[c(TRUE,FALSE)]
+names(mv)=letters[1:10]
+```
+## matrix
+A matrix is a vector with a `dim` attribute:
+
+```{r}
+bob=1:100
+dim(bob)=c(20,5) #20 rows and 5 columns
+bob
+```
+
+Notice the way in which the numbers fill the array.  Ensures that caching is more likely for values in the same column.
+
+Here are two more, perhaps more informative, ways to build the same matrix:
+
+```{r}
+matrix(1:100,nrow=20)
+matrix(1:100,ncol=5)
+```
+
+Can assign `rownames` and `colnames`:
+
+```{r}
+bob=t(bob) #transpose of bob # now 5 rows and 20 columns
+colnames(bob)=letters[1:20]
+bob
+```
+
+### Matrix indexing
+
+Can access matrix entries using:
+
+* Single number indexing
+* Comma separated indexing
+* commas with blanks (all)
+* numeric vector indexing
+* numeric vectors separated by commas
+* logical vector indexing
+* logical vector indexing separated by commas
+* 
+
+```{r}
+pairs=outer(letters,letters,paste0)
+names(bob)=pairs[1:100]
+bob["ac"]
+bob[2,"f"]
+bob[1:2,2:4]
+coords=rbind(c(1,3),c(2,4),c(1,1))
+coords
+bob[coords] #loses colnames and rownames, but retains names
+```
+
+Specific column, specific row
+## Finding entries:
+
+```{r}
+which(bob<=20 & bob>=15)
+which(bob<=20 & bob>=15,arr.ind=TRUE) #stored as a matrix.
+```
+###Recycling
+
+Remember, a matrix is, secretly, just a 1-dimensional array.
+
+**discuss recycling**
+
+```{r}
+bob+1
+bob+1:5
+bob[c(TRUE,TRUE,FALSE,FALSE),c(TRUE,FALSE)]
+```
+
+** discuss negative values**
+
+```{r}
+bob[-2,]
+bob[,-2]
+bob[,(-2):(-5)]
+```
+
+Forcing the dimension attribute to go away:
+
+```{r}
+c(bob)
+```
+
+### dimnames array
+
+Discuss
+
+* rownames
+* colnames
+* dimnames
+* names
+
+## Lists
+
+Lists have a `names` attribute.  It is the primary data.type for holding all sorts of things.  with the `attach` (or `with`) command the names in a list can, effectively, be turned into variables.  The `list` data type allows for the use of `$` construction
+
+```{r}
+l=list(nums=1:20,letters=letters[1:10],recur=list(age=47,names=c("peter","dolan")))
+```
+
+
+## Data Frames
+
+Replaced, in the tidyverse with the `tibble`.  There is also a package called "data.table" which has some very nice properties (see https://kykimeng.com/posts/intro-to-data-table/).  We'll use plain data.frames for now.
+
+All columns must have same length (will recycle if it can):
+
+```{r}
+anna=data.frame(nums=1:10,letters=letters[1:5])
+```
+
+rownames, colnames, dimnames, names Are very similar, but not identical.  `colnames` and `names` are synonyms for data.frames.
+
+data.frames ALSO have the `$colname` construction:
+
+```{r}
+anna[,"letters"]
+anna[,2]
+anna$letters
+```
+A dataframe is a `list` with a `class` attribute of `"data.frame"`.  (The system enforces the same-length requirement).
+
+## Making Decisions
+
+In R the main structures for controlling the **flow** of the program are:
+
+* `if`
+* `for`
+* `while`
+
+The `if` construction allows for an optional `else`.  The overall structure of the complete form is:
+
+```{r,eval=FALSE}
+if(condtion){
+  # Run if condition is true
+} else {
+  # Run if condition is false
+}
+```
+
+Here is an example:
+
+```{r}
+n=10
+if(n>5){
+  cat("Greater than five")
+} else {
+  cat("Not greater than five")
+}
+
+n=4
+
+n=10
+if(n>5){
+  cat("Greater than five")
+} else {
+  cat("Not greater than five")
+}
+
+```
+
+This construction allows R to **make a choice**.  It does not, however, allow for loops.
+
+### Loops
+
+Our first loop is the `for` loop:
+
+```{r,eval=FALSE}
+for( var in object){
+  # code to execute
+}
+```
+
+The idea here, is that the `object` contains a number of entities.  The `#code` is execute once for each element in the `object`.  For example, if the object is the vector `1:10` then the code will run 10 times.  Each time, the value of `var` is set to the next entry in the object:
+
+```{r}
+for(num in 1:5){
+  cat(num,"\n")
+}
+```
+
+It's most common to use sequences constructed using the `:` operator (like in the example above), but one can also use lists.  Whether a vector or a list, any extra attributes are ignored-- so a matrix acts like a one-dimensional vector and the loop is run once for each entry.  Similarly, a data.frame is really a list whose entries are the columns in the data.frame-- so a for loop run on a data.frame will run once for each column.
+
+
+The R commands `break` and `next` allow one to 
+
+* exit the loop (`break`)
+* skip to the next iteration (`next`)
+
+Although they are not **flow control** in the normal sense of the word-- there are also functions that sequentially apply a function to various entries:
+
+* lapply-- applies a function once to each entry in a list
+* sapply-- does the same thing but tries to simplify the output
+* apply-- applies a function to each row (or each column) of a matrix or data.frame
+
+There are other variants, but these are the ones that I use most commonly.
+
+In classic R loops were very slow and it was usually faster to find a way to use `lapply` or `sapply`.  Modern R uses bytecode and so I'm not certain if it's still faster to use `lapply` or not.  IN fact, in certain cases it is definitely slower since both `sapply` and `lapply` make a large output vector whereas a for-loop doesn't have that overhead.
+
+My advice is now a bit different then it had been the past-- use `lapply` and `sapply` where it makes sense (when you have a vector or list that you would like to transform by applying the same function to every entry) and use a `for` loop when iterating over a sequence makes the most sense-- An example of the latter would arise from collapsing a vector or list into a single value.  (think of an operation such as `sum` as an example... however, `sum` is best performed by the `sum()` function since that loops in C at a much faster rate.).  In many cases, R functions are already **vectorized** which means the function will automatically apply itself to every entry in a vector.  Consider, for example, `nchar` which returns the number of characters in a string:
+
+```{r}
+names=c("Peter","Amy", "Heather", "Ryan")
+nchar(names)
+```
+We could get the same result using `sapply`:
+
+```{r}
+sapply(names,nchar)
+```
+The advantage of using `sapply` in this situation is that the resulting vector has the names of the original character values (which we might, or might not, want).
+
+In other languages the idea of applying a function to every element in an array (what R calls a vector is known as an array in most other languages) is known as **map**.  Condensing all the values in an array down to a single value (perhaps by adding them together) is known as **reduce**.
+
+```{r}
+for(i in 1:10){
+  if(i==3){break;}
+}
+cat(i)
+```
+### while loops
+
+If `for`-loops capture the idea of repeating a set of actions for a specified amount of time, then `while`-loops capture the idea of repeating an action "as long as necessary".  The basic construction is 
+
+```{r,eval=FALSE}
+while(condition){
+  # code to execute
+}
+```
+
+Similar to `for`-loops, the `break` command will exit the while loop.  Let's look at a non-trivial example.  Here is the idea:
+
+1. Take a positive integer.  
+2. If the number is even divide by 2
+3. If the number odd then multiply by 3 and add 1 ($3n+1$)
+
+Repeat this process until the number $1$ is reached (the observant among you :
+
+```{r,eval=FALSE}
+looper=function(n){
+  n=floor(n) # Ensure that the input is an integer
+  if(n<=0){stop("n must be an integer greater than 1")}
+  loop=c(n)
+  while(n!=1){
+      #You will write this code in an exercise.
+  return(loop)
+}
+looper(41)
+plot(looper(41),type="b",ylab="value",xlab="index")
+```
+
+```{r,echo=FALSE}
 looper=function(n){
   n=floor(n) # Ensure that the input is an integer
   if(n<=0){stop("n must be an integer greater than 1")}
@@ -104,30 +430,93 @@ looper=function(n){
   }
   return(loop)
 }
+looper(41)
+plot(looper(41),type="b",ylab="value",xlab="index")
+```
+
+Look at what happens if we find the lengths of these loops for the first 1000 elements:
+
+```{r}
 #loops=sapply(1:100000,function(n){length(looper(n))})
 loops=sapply(1:1000,function(n){length(looper(n))})
 plot(loops)
 ```
 
-```{python}
-import matplotlib.pyplot as plt
-def looper ( n ):
-  "This calculates the 3n+1 loop"
-  n=int(n)  
-  if n < 0:
-    raise ValueError('n should be greater than 0')
-  loop = [n]
-  while (n!=1):
-    if (n%2==0):
-      n=int(n/2) #ensure it remains an integer
-    else:
-      n=3*n+1
-    loop.append(n)
-  return(loop)
-  
-looper(3)
-results=list(map(lambda n: len(looper(n)),range(1,1000)))
-plt.plot(range(1,1000),results,'ro')
+
+## Piping in R
+
+You've learned about `|`, `>`, `>>`, `<`, `2>`,`2>>` in unix shells.  But there is **also** a form of piping in R.  The package `magrittr` (look up [René Magritte](https://en.wikipedia.org/wiki/Ren%C3%A9_Magritte) and you too will be in on the joke):
+
+![This is not a pipe](https://upload.wikimedia.org/wikipedia/en/b/b9/MagrittePipe.jpg)
+
+The R package `magrittr` overloads the `%>%` operator (for example)
+
+The basic construction is 
+
+```
+lhs %>% rhs
 ```
 
-https://docs.microsoft.com/en-us/azure/devops/pipelines/create-first-pipeline?view=azure-devops&tabs=tfs-2018-2
+The lefthand side should represent a value (or be a magrittr placeholder)
+The right hand side is a function call
+
+Examples of use:
+
+unary function: `x %>% f` is, mostly, equivalent to `f(x)`
+
+f with other arguments: `x %>% f(y)` is, mostly, equivalent to `f(x,y)`
+
+Using `.`:  `y %>% f(x,.)`  will replace `.` with `y`
+
+
+We can also use anonymous function (if we are careful about our parenthesis):
+
+```{r}
+library(magrittr)
+3 %>% (function(n){n+1})
+```
+
+## Web Scraping
+
+We need data, so let's recall some of our web-scraping experiences.  We'll use the `rvest` package which, similar to `magrittr` overrides `%>%`.  It makes use of `xml2`:
+
+```{r}
+library(rvest)
+url<-"https://en.wikipedia.org/wiki/List_of_states_and_territories_of_the_United_States_by_population"
+url %>% read_html() %>% html_nodes(xpath='//*[@id="mw-content-text"]//table[1]') %>% html_table() -> population
+population<-population[[1]]
+```
+
+It's probably been awhile... but let's think about what's happening.
+
+The `url` is passed to `read_html()` which, essentially, opens up a connection to the page.  The `html_nodes()` function creates an R object that corresponds to nodes described using *xpath* or *css* (we are using xpath).
+
+If you think of `read_html()` as making a local copy of the **tree* associated to the document, then `html_nodes()` extracts all the desired nodes.  Recall, that in an HTML (or XML) document, the nodes corresponds to all the TEXT encompassed by the corresponding tags... so we are, essentially, getting ALL the tables.
+
+Xpath                      | meaning
+---------------------------|-----------------
+`//`                       | Descend as far as necessary to find
+`*[@id="mw-content-text"]` | nodes with the id "mw-content-text" 
+`//`                       | Continue descending
+`table[1]`                 | Until you find the first table
+
+Surprisingly we actually get 3... that's because there is more than 1 table that matches this description-- if we leave out the `[1]` we get **five** tables-- the `[1]` ensures that we don't get SIBLING tables-- but other tables at different depths in the tree are still fair game because of the second `//` in the XPATH.
+
+## POPQUIZ
+
+Return the names of all states with populations less than one million
+
+```{r}
+population[[5]]=gsub(",","",population[[5]]) #Remove the comma's
+population[[5]]=gsub("\\[\\d+\\]","",population[[5]]) #Remove the footnotes
+population[[5]]=as.numeric(population[[5]])
+population$name[population[[5]]<1000000]
+```
+
+Notice the use of regular expressions again?  That's probably been awhile too.  Think about reviewing them.
+
+Now do a subtable with the state name and the population
+
+```{r}
+population[population[[5]]<1000000,c(3,5)] #the short way
+```

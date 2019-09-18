@@ -235,11 +235,11 @@ quiz(
     answer("execute",correct=TRUE),
     answer("group access")
   ),
-  question("In order to list the entries in a directory what permission(s) must be ",
-    answer("/var/log/vim.log",correct=TRUE),
-    answer("../../var/log/vim.log"),
-    answer("~washington/../../var/log/vim.log"),
-    answer("../var/log/vim.log")
+  question("In order to list the entries in a directory what permission(s) must be present?",
+    answer("read",correct=TRUE),
+    answer("write"),
+    answer("execute"),
+    answer("Burma Shave")
   ),
   question("Which linux command shows the current working directory",
     answer("`pwd`",correct=TRUE),
@@ -367,5 +367,5 @@ The first line is my **local address**.  The second line indicates the proper to
 
 In a CIDR address the number indicates how many bits in the address are associated to the **network** and how many to the **client**.  This is similar to saying how many of the 128 bits are used to indicate the first line (`407 East 6th street`) and how many are used to indicate the second line `Morris, MN 56267`.
 
-Instead of a postal address the IP address is used.  The number after the slash `/` in the CIDR notation indicates how many bits in the address are related
+Instead of a postal address the IP address is used.  The number after the slash `/` in the CIDR notation indicates how many bits in the address are related to the host and how many to the network.
 

@@ -1,4 +1,6 @@
 library(htmltools)
+library(xml2)
+library(data.tree)
 #Need some tools to make a table  Looks like I could use tagAppendChild and or tagAppendChildren
 
 td=function(cells){lapply(cells,function(cell){tag("td",cell)})}
@@ -200,3 +202,20 @@ check_exercise <- function(
 
 #ps.file="localdata.rdata" #Needs to be run on a local machine
 ps=problemSet() #Setup the problem set... totally worthless right now.
+
+makeDirList=function(){
+  dirs<-list.dirs(recursive=TRUE)
+  tmp<-strsplit(dirs,"/")
+  dir.list=list("."=list())
+  invisible(#build a list to match the tree structure of the directory
+    sapply(tmp,
+           function(sub.dir){
+             path=c()
+             for(sub in sub.dir){
+               path=c(path,sub)
+               if(is.null(dir.list[[path]])){dir.list[[path]]<<-list()}
+             }
+           })
+  )
+  return(dir.list)
+}
