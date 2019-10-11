@@ -1,0 +1,279 @@
+---
+title: "Regression II"
+output: learnr::tutorial
+runtime: shiny_prerendered
+---
+
+```{r setup, include=FALSE}
+library(learnr)
+library(kableExtra)
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Decision Trees Reading
+
+Perhaps a better way to make a decision is to use something more suited to classification... such as a decision tree read [this article](https://medium.com/analytics-vidhya/a-guide-to-machine-learning-in-r-for-beginners-decision-trees-c24dfd490abb) now. (**note:** It is quite long. Give yourself some time to go through it.  Type along in the console as you read.) 
+
+```{r quiz}
+quiz(
+  question("What are decision trees used for?",
+    answer("classification",correct=TRUE),
+    answer("entropy minification"),
+    answer("regression", correct = TRUE),
+    answer("Outlining a course of action")
+  ),
+  question("For a categorical response value, the path from root to node corresponds to which of the following:",
+    answer("A classification of that case", correct = TRUE),
+    answer(""),
+    answer("stats"),
+    answer("grid", correct = TRUE)
+  )
+)
+```
+
+## Decision trees Practical
+Similar to the first regression tutorial let's use the UCLS data for  our exploration:
+
+```{r}
+# Load CART packages
+library(rpart)
+library(rpart.plot)
+df <- read.csv("https://stats.idre.ucla.edu/stat/data/binary.csv")
+df$rank=factor(df$rank) # Best for rank to be a factor
+admit.tree=rpart(admit ~ gre + gpa+rank, data=df,method="class")
+prp(admit.tree)
+```
+
+So, given a row in the table we follow the directions by answering a series of yes/no questions:
+
+Let's use the first row as an example.
+
+1. $\textrm{gpa}<3.4$ NO (go right)
+1. $\textrm{rank}$ is 2, 3, or 4.  YES (go left)
+1. Prediction is 0
+
+Just like the results from the logistic regression we can use the model to make a prediction.
+
+First look at the first few predictions:
+
+```{r}
+tree.p=predict(admit.tree)
+head(tree.p)
+```
+
+You can see that the tree puts  70% chance that row 1 is a 0 and a 30% chance that it is a 1.  We want to pick the larger of the two values.  We can, fairly easily, look at the column for 1.  If it is higher than 0.5 then we'll choose 1 (since each row must add to 1).  I choose higher than 0.5 instead of higher than *or equal* to 0.5 since there are more 0's... so if we don't know any better, might as well choose the more common one.  Note that the innermost expression evaluates to `TRUE` and `FALSE`, but `as.numeric` turns `FALSE` to 0 and `TRUE` to 1:
+
+Let's make the confusion matrix for this classification:
+
+```{r}
+pv=predict(admit.tree,type="class")
+table(df$admit,pv)
+```
+
+Our accuracy is $\frac{249+54}{400} = 0.7575$.  That's better than before.  Also our Type I and Type II error rates are more balanced.
+
+Notice that **it is impossible** to guess everything correctly.  Rows 15 and 166 on the table are identical in all respects **except** the value of *admit*:
+```{r results="asis"}
+kable(df[c(15,166),]) %>%kable_styling()
+```
+
+Now... MOST of the combinations of values are distinct... which means that one **could**, produce a very exhaustive list of special cases to make VERY accurate predictions... HOWEVER that would only work on the specific data-set and would be extremely unlikely to transfer well to new data.  This problem is known as **over-fitting**.
+
+However... look at the tree again and think about what it's saying...
+The first thing it looks at is a student's gpa.  Is it low (below 3.4) or high?
+That's the first devision.  If the GPA is low than a student who does not come from a well-ranked school is weeded out.  If they DO come from a higher ranked school then they'd better have a pretty impressive GRE score.  A score of less than 730 rules them out... otherwise they're in. (probabilistically speaking of course)
+
+On the other hand.. if the GPA is higher and the school is top ranked... then the student is accepted if the school is low ranked 3 or 4 the student is rejected.  After this the GPA is taken into consideration.  This one gets a bit... *weird*  If your GPA iS between 3.4 and 3.5 then you're accepted.  If your GPA is between 3.5 and 3.7 you are rejected.  Otherwise your GRE is used to determine your acceptance.
+
+Let's add `extra=1` to the `prp` function.  This will add the number of rows correctly (and incorrectly) classified:
+
+```{r}
+prp(admit.tree,extra=1)
+```
+
+This provides us a better sense from whence the errors in prediction are arising.... first off-- notice that no matter what occurs at the first split-- a rank 3 or rank 4 school is given a best guess of 0... so in that subset... without taking anything else into consideration just saying predicting "reject" will be correct almost 79% of the time... So that's a pretty good indicator.  It's not that the tree couldn't decide to be more aggressive in its branching... but that defeats part of the purpose-- the goal is to identify *trends*-- simplifying patterns that tell us something meaningful about the overall system-- not to blindly pursue accuracy at the cost of sensibiity.
+
+The `summary` provides another way to view the rules.  Note that some nodes may be "collapsed" and not appear in the graphed tree:
+
+<div style="max-height: 300px;float: left;width: 100%;overflow-y: auto;">
+```{r}
+summary(admit.tree)
+```
+</div>
+
+At each stage of the game the decision tree is trying to **partition** the data into two sets based upon some "rule.  Each set is given a "prediction".  If the split can successfully improve discrimination beyond a certain threshold then it is added.  There are usually restrictions on both **depth** and **bin size**.  For example, the process, typically, stops trying when it reaches a depth of 30, or when the partition under consideration has 5 or fewer observations.  This generates a tree that is, almost certianly, too complicated (recall what we said about *over fitting* earlier).  
+
+The second step is to **trim** the tree.  The `rpart` function does some of this automatically-- you might wish to do some more.  The `prune()` function allows you to do this
+
+Read [this DZone article on decision trees](https://dzone.com/articles/how-to-create-a-perfect-decision-tree)
+
+There are a number of decisions to make about both what the model is saying, as well as how good of a job it is doing.
+
+ Function                         | Notes
+----------------------------------|-------------------
+ `rpart(...,method="class")`      | Build the classification tree.  Uses conventions similar to `lm()`
+ `prp(tree)`                      | Makes a graph of tree (from `rpart.plot` package)
+ `summary(tree)`                    | Shows the rules, the call, the printcp table, and variable importance.
+ `plotcp(tree)`                      | Produce the complexity plot.
+ `printcp(tree)`                      | Table of the complexity plot
+ `print(tree)`                       | Essentially a summary
+ `PRESS(tree)`                       | Should work but doesn't                       
+ `prune(tree)`                       | Prune the tree   
+
+In general, we assess by making a confusion matrix via `predict()` and `table()`.  More particularly, `rpart` performs cross-validation and this information is accessed graphically via `plotcp()` and in table form as `printcp()`.  It is also included in `summary()`
+
+```
+The x-error is the cross-validation error (rpart has built-in cross validation). You use the 3 columns, rel_error, xerror and xstd together to help you choose where to prune the tree.
+
+Each row represents a different height of the tree. In general, more levels in the tree mean that it has lower classification error on the training. However, you run the risk of overfitting. Often, the cross-validation error will actually grow as the tree gets more levels (at least, after the 'optimal' level).
+
+A rule of thumb is to choose the lowest level where the rel_error + xstd < xerror.
+
+If you run plotcp on your output it will also show you the optimal place to prune the tree.
+
+From https://stackoverflow.com/questions/29197213/what-is-the-difference-between-rel-error-and-x-error-in-a-rpart-decision-tree?rq=1
+
+```
+
+```
+I would like to add some info to \@Harold Ship's answer. Actually, there are three ways to select the optimal cp value for pruning:
+
+Use the first level (i.e. least nsplit) with minimum xerror. The first level only kicks in when there are multiple level having same, minimum xerror. This is the most common used method.
+
+Use the first level where xerror falls into the ±1 xstd range of min(xerror), i.e., xerror < min(xerror) + xstd, the level whose xerror is at or below horizontal line. This method takes into account the variability of xerror resulting from cross-validation.
+
+Note: rel_error should NOT be used in pruning.
+
+(A rarely used method) Use the first level where xerror ± xstd overlaps with min(xerror) ± xstd. i.e., the level whose lower limit is at or below horizontal line.
+```
+
+**Exercise:** Now read [this article](http://uc-r.github.io/regression_trees) and reproduce their code (no copy-pasting allowed!) which discusses using regression trees to categorize more than just a binary response.  It's the same basic idea, but the prediction is for more than just 0 or 1.  Notice that the `rpart()` function is using `method="anova"` rather than `method="class"`.
+
+Pay special attention to the discussion around 
+
+* The PRESS Statistic
+* Relative Error
+* Cross-Validation X error
+
+`plotcp(model)`, `printcp(model)`
+
+DEFINE:
+CROSS-VALIDATION ERROR
+PRESS STATISTIC
+MSE
+```{r regression-exercise-external exercise}
+library(rsample)
+library(dplyr)
+library(rpart)
+library(rpart.plot)
+library(ipred)
+library(caret)
+
+set.seed(123)
+ames_split <- initial_split(AmesHousing::make_ames(),prop=0.7)
+ames_train <- training(ames_split)
+ames_test <- testing(ames_split)
+
+m1 <- rpart(
+  formula=Sale_Price ~ .,
+  data   =ames_train,
+  method ="anova"
+)
+
+rpart.plot(m1) #plot the tree
+plotcp(m1)     #plot complexity parameter table
+```
+
+## Random Forests
+
+This is a pretty small data set.  When the data set is larger there may be conflicting choices, more noise, and other issues that make producing the optimal decision tree problematic.  One approach is to pick a random subset of the data (rows **and** columns) and build a tree from that subset.  Repeat this process many, many times.  The rows are selected **with replacement** (This is known as **bootstrapping**).  
+
+I want to reiterate a few details about the **random subset** idea.  For random forests this is more than just selecting random rows with replacement.  The explanatory variables are ALSO selected at random.  As the many random trees are produced, the various explanatory variables involved in the rules are monitored and a running tally of **the most important variables** are produced.
+
+There are many **aggregation techniques** that do something similar.  Bootstrap aggregation (**bagging**) is one such example.  However, randomly producing trees can generate many trees that are too similar.  This reduces the effectiveness of the technique.  The **random forest** idea 
+
+**EXERCISE:** Read the [following tutorial from uc-r](https://uc-r.github.io/random_forests) and reproduce their example. Do **NOT** copy and paste.
+
+```{r random-forest-exercise exercise}
+library(rsample)      # data splitting 
+library(randomForest) # basic implementation
+library(ranger)       # a faster implementation of randomForest
+library(caret)        # an aggregator package for performing many machine learning models
+library(h2o)          # an extremely fast java-based platform
+library(AmesHousing)
+set.seed(123)
+ames_split<-initial_split(AmesHousing::make_ames(),prop=0.7)
+ames_train <- training(ames_split)
+
+```
+
+POTENTIALLY Read [Leo Breiman and ADele Cutler's manual on Random Forests](https://www.stat.berkeley.edu/~breiman/RandomForests/).  
+
+```{r}
+#cars<-read.csv("https://archive.ics.uci.edu/ml/machine-learning-databases/car/car.data")
+```
+## Boosted Regression
+The package `gbm` will perform boosted regression and the summary provides a nice summary of the relative influence of the explanatory variables:
+
+```{r}
+library(gbm)
+test=gbm(data=df,admit~gre+gpa+rank)
+summary(test)
+```
+
+## Regression Trees
+
+Rather than just attempting to classify, the partitioning technique can *also* break the explanatory-data space into subspaces... each with their own regression line... think of it as a decision tree whose leaves result in a data set and a regression on that set.
+
+NOTE:  
+DISCUSS DIFFERENCE BETWEEN CLASSIFICATION TREE AND REGRESSION TREE
+MAKE SOME PLOTS
+ADD SOME EXERCISES
+DRAWBACKS AND SHORTCOMINGS OF THIS APPROACH (RANDOM NATURE OF CUTS TOO)
+
+### Exercise with Hint
+
+*Here's an exercise where the chunk is pre-evaulated via the `exercise.eval` option (so the user can see the default output we'd like them to customize). We also add a "hint" to the correct solution via the chunk immediate below labeled `print-limit-hint`.*
+
+Modify the following code to limit the number of rows printed to 5:
+
+```{r print-limit, exercise=TRUE, exercise.eval=TRUE}
+mtcars
+```
+
+```{r print-limit-hint}
+head(mtcars)
+```
+
+### Quiz
+
+*You can include any number of single or multiple choice questions as a quiz. Use the `question` function to define a question and the `quiz` function for grouping multiple questions together.*
+
+Some questions to verify that you understand the purposes of various base and recommended R packages:
+
+```{r quiz}
+quiz(
+  question("Which package contains functions for installing other R packages?",
+    answer("base"),
+    answer("tools"),
+    answer("utils", correct = TRUE),
+    answer("codetools")
+  ),
+  question("Which of the R packages listed below are used to create plots?",
+    answer("lattice", correct = TRUE),
+    answer("tools"),
+    answer("stats"),
+    answer("grid", correct = TRUE)
+  )
+)
+```
+
+
+## Non parameteric regression
+
+(Borrowing heavily from Chapter 18 of John Fox's Applied Regression Analysis and Generalized Liner Models)
+
+The techniques we have discussed earlier are all based on an underlying model whose exact from is determined by numeric **parameters**.  The process of regression determines reasonable values for these parameters.  There are other techniques that do not 
+
+One technique that does not rely upon an underlying parametric model for the data is known as **local linear regression** (or **loess**).  As with most non-parametric forms of regressin 

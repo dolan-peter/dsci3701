@@ -1,0 +1,93 @@
+---
+title: "Week 8"
+author: "Peter Dolan"
+date: "10/11/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Response Curve
+
+Let's finish up what we did last week by looking at one last example of logistic regression.  We will use the width of the crab to estimate the probability that a female crab has male satellites:
+
+```{r}
+crab$hasS = as.numeric(crab$n.sat>0)                       # Make the binary response variable
+model.logistic=glm(data=crab,hasS~width,family=binomial()) # Model it
+summary(model.logistic)
+```
+
+Now let's look at the confusion matrix:
+
+```{r}
+fv=fitted.values(model.logistic)
+ov=crab$hasS
+pv=as.numeric(fv>=0.5)
+table(pv,ov)
+```
+
+That's great as far as it goes... but what if we wanted information on 
+## Decision Trees.
+
+So we looked at logistic regression and how it is used to estimate the *probability* that a given observation will fall within a target category based upon a collection of values in the explanatory variable.  It is not designed to be used as a categorizer, but we treated it like one anyway and calculated a confusion matrix.  Let me reproduce that:
+
+```{r}
+df <- read.csv("https://stats.idre.ucla.edu/stat/data/binary.csv")
+df$rank=factor(df$rank) # Best for rank to be a factor
+full.model=glm(data=df,admit~gpa+gre+rank,family=binomial())
+fv=fitted.values(full.model)
+predicted.cat=ifelse(fv>=0.5,1,0)
+table(df$admit,predicted.cat)
+```
+
+Our accuracy is $\frac{254+30}{254+19+97+30} = \frac{274}{400}=0.685$ which is 68.5 percent.
+
+Notice that if we just predicted "rejection" for every applicant, regardless of other characteristics:
+
+```{r}
+table(df$admit)
+273/273+127
+```
+
+Our accuracy is 68.25.  However our confusion matrix is much more lop-sided.  Again, this underscores the assertion that the purpose of logistic regression is not to categorize.
+
+Perhaps a better way to make a decision is to use something more suited to classification... such as a decision tree read [this article](https://medium.com/analytics-vidhya/a-guide-to-machine-learning-in-r-for-beginners-decision-trees-c24dfd490abb) now.  
+
+Similar to the first regression tutorial let's use the UCLS data:
+
+```{r}
+# Load CART packages
+library(rpart)
+library(rpart.plot)
+df <- read.csv("https://stats.idre.ucla.edu/stat/data/binary.csv")
+df$rank=factor(df$rank) # Best for rank to be a factor
+admit.tree=rpart(admit ~ gre + gpa+rank, data=df,method="class")
+prp(admit.tree)
+```
+
+We built and plotted the tree.  The tutorial Regression II goes into greater depth 
+
+So, given a row in the table we follow the directions by answering a series of yes/no questions:
+
+Let's use the first row as an example:
+
+```{r,echo=FALSE}
+df[1,]
+```
+
+1. $\textrm{gpa}<3.4$ NO (go right)
+1. $\textrm{rank}$ is 2, 3, or 4.  YES (go left)
+1. Prediction is 0
+
+Let's make the confusion matrix:
+
+```{r}
+pv=predict(admit.tree,type="class")
+table(df$admit,pv)
+```
+
+So what is the decision tree doing?  The algorithm **splits** the data into subsets.  
+Each subset is then recursively split (which is why the packages is called `rpart` 
+which is short for recursive partition).  At each split the algorithm attempts to split the cases (based upon the response variable) in such a way as to create the largest possible *reduction in heterogenity of the explanatory variables*.

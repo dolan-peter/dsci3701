@@ -1,0 +1,362 @@
+---
+title: "Week 5"
+author: "Peter Dolan"
+date: "9/22/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(reticulate)
+use_python("/home/dolanp/.virtualenvs/r-reticulate/bin/python",required=TRUE)
+matplotlib<-import("matplotlib")
+matplotlib$use("Agg",force=TRUE) #Enable the matplotlib rendering engine.
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+I want to ensure that we cover all the material that I have planned so I'm going to give a bit less exposure to Python than I had originally planned.  I'll spend half a day on Monday going over some more sophisticated Python structures.
+
+## Vocabulary
+
+A data structure is **immutable** if its value can not be changed.  R treats a surprisingly large number of objects as immutable... kinda.. sorta.  For example:
+
+```{r}
+#R
+my.array=c("first","second")
+bob=function(arr){
+  arr[1]="different first"
+  return(arr)
+}
+output=bob(my.array)
+output
+my.array
+```
+
+Notice that the value of `my.array` has not, in fact, been changed.  
+
+* R **copies** the value of associated first parameter in the function call `bob` (in our case it copies `my.array`).  This is attached to the argument variable `arr`.  When `arr` is returned, another copy is made and assigned to `output`.  This *could* be terrible for memory usage, but R uses **lazy evaluation**.. which means the copy doesn't actually occur until it is needed.  
+
+```{python}
+#Python
+myArray=["First","Second"]
+def bob(arr):
+    arr[0]="Different First"
+    return(arr)
+
+output=bob(myArray)
+output
+myArray
+```
+
+Notice that in this example `myArray` **has changed**.  Even moreso:
+
+```{python}
+#Python
+output is myArray
+```
+
+The two variables `output` and `myArray` are referring to the same location in memory!  **BE CAREFUL**.  These differences are huge.
+
+## Data Structures
+
+We are going to mix terminology from the two languages here.  These are the terminologies that I will use:
+
+* **Strings:** Character data
+* **Tuple:** An immutable ordered sequence of objects
+* **List:** A mutable ordered sequence of objects
+* **Array:** A mutable ordered sequence of *things* of the same type ( a `vector` in R)
+* **Set:** A collection of objects without repeats
+* **Associative Array:** A mutable sequence of *things* indexed by **strings**
+    * Implemented by assigning a `names` attribute to a vector in R
+    * Implemented as a `dict` in Python
+
+## Python Data Structures
+
+### Lists
+
+Lists in Python are similar to lists in R although the syntax for a Python list is closer to the syntax for an R vector.
+
+```{python}
+#python
+array=['first','second',10,30]
+array[1] #this is the SECOND entry
+array[1:3] #This returns the second, and third but NOT fourth entry in the array
+array[1:] #From second entry to end
+array[:2] #From start to second entry.
+array[-1] #Last entry
+array[-2] #Second to last entry
+```
+
+
+### Tuples
+
+The first is a tuple-- it can be surrounded by parenthesis, but does not need to be.  The entries are **immutable**-- they can't be changed:
+
+
+```{python}
+example=3,4,'a'
+example2=(3,4,('a',10),4)
+example[0]
+example2[0]
+example2[2]
+example2[2][1]
+#example2[0][0]  #this would generate an error
+#example[1]=2    # this would generate an error too
+```
+
+### Dictionaries
+
+These are key-value pairs-- otherwise known as an associative array.  Python uses `{` and `}` (very similar to JSON).  Notice the `:`
+
+```{python}
+#Python
+ageLookup={'Peter': 48, 'Heather': 35, 'Amy': 40, 'Zet': 11}
+ageLookup["Peter"]
+## Adding
+ageLookup["Ollie"]=110 #Adding a new value
+ageLookup
+## Removing
+del ageLookup["Ollie"]
+ageLookup
+## Looking for a key
+"Peter" in ageLookup
+"Ollie" in ageLookup
+
+#Iterating over keys with a `for` loop:
+for key in ageLookup:
+  print(key)
+#Iterating over key-value pairs with a `for` loop (notice the .items() method):
+for key,value in ageLookup.items():
+  print(key,"->",value)
+
+```
+ 
+In R we use the `names` attribute:
+
+```{r}
+#R
+age.lookup<-c(Peter=48,Heather=35,Amy=40,Zet=11) # Method 1
+age.lookup["Peter"]
+#or
+age.lookup=c(48,35,40,11) # Method 2
+names(age.lookup)=c("Peter","Heather","Amy","Zet")
+age.lookup["Peter"]
+```
+
+### Sets
+
+These capture the mathematical idea of a set.  In otherwords the abstraction of **categorization**.
+
+(I'll probably do a big spiel on this in class)
+
+**In Python:** they use the `{` and `}` similarly to how sets are defined in mathematics.  The difference between a `dict` and a `set` is in whether or not there is a key.
+
+```{python}
+#python
+A = {1,2,3}
+B={2,2,3,1,3}
+A==B #True
+```
+
+**Adding elements:**
+```{python}
+#python
+C={1,2,3}
+C.add(5)
+C
+```
+
+**Removing elements:**
+```{python}
+#python
+C.discard(5)
+C
+#Can also use .remove()... but that throws an error if the elt is not present.  .discard() does not.
+```
+$\left|A\right|$ is found using `len(A)`:
+
+```{python}
+#python
+len(A)
+A.add(3)
+len(A) # doesnt' change because 3 is already in A
+```
+
+We can use `in` and `not in` to detect membership and lack of membership:
+
+```{python}
+#python
+3 in A
+5 in A
+```
+We can iterate over elements with `for`:
+
+```{python}
+#python
+for elt in A:
+   print(elt)
+B={2,3,4,5}
+```
+
+**Set operations:**
+
+Here is a non-exhaustive list of some set operations:
+
+|Operation                      |         Symbolism
+|-------------------------------|---------------------
+|$\textrm{union}                | `A|B` or  `A.union(B)`
+|$\textrm{intersect}            | `A&B` or  `A.intersection(B)`
+|$\textrm{set difference}       | `A-B` or  `A.difference(B)`
+|$\textrm{symmetric difference} | `A-B` or  `A.difference(B)`
+|$A \subseteq B$                | `A <= B` or `A.issubset(B)`
+|$A \supseteq B$                | `A >= B` or `A.issuperset(B)`
+|$A \subset B$                  | `A < B` or `A.issubset(B)`
+|$A \supset B$                  | `A > B` or `A.issuperset(B)`
+|$A == B$                       | `A == B`
+
+**Warning:** Some mathematicians use $A \subset B$ to mean $A \subseteq B$, and $A \varsubsetneq B$ to denote a **proper** subset.
+
+Also:
+
+```{python}
+# python
+A={1,2,3}
+B={1,2,3}
+A==B #True... same contents
+A is B # False... different objects
+C=A
+C is A # True same object... so changing one changes the other.
+C.discard(3)
+A #A not longer has a 3
+```
+
+---
+
+There is no analog in R, although there are set-based operations.  Without knowing the **universe** the **complement** operation can't be performed, but if there is a universal set of some sort (call it U) then the `setdiff` function can generate the complement.
+
+* `unique()`
+* `setdiff(A,B)`
+* `union(A,B)`
+* `intersect(A,B)`
+* `setequal(x,y)`
+* `is.element(e1,set)`
+
+## Sequences
+
+In Python, `lists`, `tuples`, and `strings` are sequencs (the latter is a sequence of characters).  It can be **sliced** similarly to any other sequence:
+
+```{python}
+# python
+string="My Test String"
+string[1] #The second character
+string[-1] #The last character
+string[:3] #The first three characters (indices 0 up to, but not including 3)
+```
+
+#Importing data into Python
+
+Python allows files to be opened using the `open()` function.  The `as` keyword associates the file to a variable and allows for processing.  For example:
+
+```{python}
+#Python
+import os
+cwd = os.getcwd()
+print(cwd)
+d={}
+
+with open("test") as f:
+  for line in f:
+    (val,key)=line.split(",")
+    d[key.strip()]=val.strip()
+for x in list(d)[0:3]:
+    print("key:  ->{}<-\nvalue ->{}<- ".format(x,d[x]))
+```
+
+# Numeric 
+
+Let's discuss the background on regression.  To begin with, we will examine the New York air quality example in the Regression I tutorial.
+
+I will review in class:
+
+* Making a linear model
+* Interpreting the coefficients
+* Checking the diagnostic plots
+
+Theory:
+
+$$
+\textrm{DATA} = \textrm{FIT} + \textrm{RESIDUAL}
+$$
+
+Futhermore
+
+$$
+\textrm{RESIDUAL} \sim N(0,\sigma^2)
+$$
+
+Our usual regression approach attempts to minimize the **sum of the squared residuals**.  This creates a model that tries to predict the location of the **mean** of the response variable **conditioned upon** the combination of explanatory values.  
+
+We could, however, try to minimize **different** functions.  
+
+**NOTE:** Some regression techniques standardize the values before performing the regression.
+
+**NOTE 2:** Ridge regression uses $L2$ regularization and Lasoo regression uses $L1$ regularization.  The term $\lambda$ is known as a **hyper parameter**.
+
+Function                                  |  Effect
+------------------------------------------|----------
+$\sum\left(\textrm{RESIDUAL}_i\right)^2$   | Estimates $\mathbb{E}(Y|X)$
+$\sum\biggl|\textrm{RESIDUALS__i}\biggr|$      | Estimates $\textrm{Median}(Y|X)$     
+$\sum\left(\textrm{RESIDUAL}_i\right)^2\ + \lambda\sum b_i^2$ | Helps stabilize coefficient values-- particularly helpful when explanatory variables have high colinearity
+$\sum\left(\textrm{RESIDUAL}_i\right)^2\ + \lambda\sum \left|b_i\right|$ | Automatically performs variable selection.
+
+You can see some interactive examples in the Week 5b document.
+
+Notice the key thing here is **minimizing a cost function**.
+
+Almost every technique that we will examine will do  this.  A careful choice of cost function will help ensure that the solutions you provide will be an accurate (or as close as you can get) reflection of the true problem and its solution.
+
+## On colinearity.
+
+Consider this model:
+
+$$
+\widehat{Y} = 10 + 2X_1 - 3 X_2
+$$
+Now... Think about a calculation for $\widehat{Y}$.  Let's suppose $X_1 = 3$ and $X_2 = 3$:
+
+$$
+\begin{aligned}
+\widehat{Y} &= 10 + 2 X_1 - 3 X_2\\
+&= 10 + 2(3) - 3(3)\\
+&= 7
+\end{aligned}
+$$
+Nothing tricky there... however... what if $X_2$ is ALWAYS the same value as $X_1$?  Then the expression collapses:
+
+$$
+\begin{aligned}
+\widehat{Y} &= 10 + 2 X_1 - 3 X_2\\
+&= 10 + 2 X_1 - 3 X_1\\
+&= 10 +(2-3)X_1\\
+&= 10 - X_1
+\end{aligned}
+$$
+This is an extreme form of collinearity... if I don't know that this relationship exists then **any** model of the following form will make the **exact same prediction** for the given $X_1$ and $X_2$ data:
+
+$$
+\widehat{Y} = 10 + aX_1 + bX_2 \qquad\textrm{where }a+b = 2+(-3) = -1
+$$
+
+In general the standard error of a coefficient for an explantory variable will be BIGGER if it is correlated with another explanatory variable.  It's actually capturing the idea of what you're seeing above... we don't change things by shifting value back and forth between $a$ and $b$.  
+
+Let's look at what effect *nearly* linear might be:
+
+```{r}
+library(scatterplot3d)
+set.seed(1) # Ensure we get the same values:
+x1=runif(100)
+#x2=runif(100)
+x2=2*x1+runif(100,-0.1,0.1)
+y=2+3*x1 - 2*x2 +rnorm(100,0,1)
+scatterplot3d(x1,x2,y,type="h")
+summary(lm(y~x1+x2))
+```

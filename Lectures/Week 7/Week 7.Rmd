@@ -1,0 +1,459 @@
+---
+title: "Week 7"
+author: "Peter Dolan"
+date: "10/4/2019"
+output: 
+  html_document:
+    toc: true
+---
+
+```{r setup, include=FALSE}
+library(stringr) #used for str_extract
+knitr::opts_chunk$set(echo = TRUE)
+```
+## Overview
+
+We covered likelihood:
+
+* One sample from a single distribution
+* Multiple samples from the same distribution
+* Drawing the likelihood curve for a family of distributions
+* Parameter values that leads to maximum likelihood estimate (MLE)
+* Switching to log likelihood
+
+Generalized Linear Models: 
+
+* Vocabulary
+    * Link function
+    * Systematic Component
+    * Random Component
+* Likelihood curve for model parameters (in a GLM context)
+* Curve of best fit uses MLE
+* Example
+    * Crab Satellites (Poisson)
+    * Crab Satellites (Negative Binomial)
+* Discussion of Over dispersion
+* Negative Binomial Distribution
+   * Definition
+   * Multiple parameterizations
+
+## Likelihood
+
+We have been discussing the logistic regression and talked *a bit* about its relationship with the $\textrm{binomial}$ distribution.  Consider a typical statement from an Introductory Statistics course where the random variable $X$ has a $\textrm{Binom}(n,p)$ distribution:
+
+$$
+\textrm{P}(X=k) = {n \choose k}p^k(1-p)^{n-k}
+$$
+Another way to write that probability distribution reinforces the dependency of the probability on the **parameters** of the **binomial family**:  namely $n$ and $p$:
+
+$$
+\textrm{P}(X=k\big|n,p) = {n \choose k}p^k(1-p)^{n-k}
+$$
+
+Notice that **given** the values of $n$ and $p$, the function on the right truly is a probability distribution.
+
+Now consider a situation in which you have observed $n$ cars passing through an intersection and kept track of the number , $k$, that actually came to a complete stop.  Assuming that the assumptions for a binomial distribution are satisfied, which one do you choose to use to model the observed situation?  In this situation $n$ is locked down solidly by the observations... so the only parameter with any wiggle room is $p$.
+
+Notice that as we consider different values of $p$, we get different probability distributions.  Under some of those distributions the observed value of $k$ will be more likely than under others.
+
+One approach to picking a distribution is find the value of $p$ which makes the observed $X=k$ the **most likely**.  
+
+So we have done something quite interesting.  We have turned the question on its head.  Let's call this function the **likelihood** function:
+
+$$
+\mathcal{L}(p) = {n \choose k}p^k(1-p)^{n-k}
+$$
+
+Notice that the right-hand side is **identical** to the right-hand side for the $\textrm{P}(X=k)$.  But our intent is different.  When we are considering the binomial distribution, we consider $n$ and $p$ to be **fixed** and see what happens when the value of $k$ is varied.  When we are consider the the **likelihood**.  We consider $k$ and $n$ to be fixed and see what happens when $p$ is varied.  This is **not** a probability function because the area under the curve made by all possible values of $p$ does not equal 1.  Consider a situation where $n=10$ and $k=3$:
+
+```{r}
+l=function(p){choose(n,k)*p^k*(1-p)^(n-k)}
+n=10
+k=3
+L=Vectorize(l)
+curve(L(x),0,1)
+```
+
+Let's approximate the area:
+
+```{r}
+n=100
+x.i=seq(0,1,length.out=n) #n equal sized chunks from 0 to 1
+y.i=l(x.i[-n]) #left hand rule
+delta.x=x.i[-1]-x.i[-n]
+sum(delta.x*y.i)
+```
+
+So we see this is definitely **not** a probability distribution.  Let's suppose we didn't know the maximum value.  Let's build a (very inefficient) function whose job is to find a local maximum.  What features would we like this function to have?
+
+1. We should provide the function to be optimized
+2. We should provide the range to examine
+3. We should provide a tolerance that determines when we are *close enough* to be happy.
+
+```{r}
+maximizer=function(f,a,b,tolerance=0.01){
+  x=seq(a,b,length.out=1000)
+  F=Vectorize(f) #Just in case f isn't already vector-capable
+  best=which.max(F(x))
+  if(best==1 | best==length(x)){return(best)} # maximum occurs at boundary
+  lower=x[best-1]
+  upper=x[best+1]
+  if(abs(upper-lower)<tolerance){return(x[best])} #Ensures recursion eventually stops
+  return(maximizer(f,x[best-1],x[best+1],tolerance))
+}
+```
+
+Now we can estimate the value of $p$ that produces the maximum likelihood:
+
+```{r}
+maximizer(l,0,1,0.0001)
+```
+
+So that's probably 0.3... which is what we would expect.
+
+For those of you that have taken calculus, we could bypass the numeric approximations:
+
+$$
+\begin{aligned}
+\textrm{P}(X=k))&={n \choose k}p^k(1-p)^{n-k}\\
+\mathcal{L}(p)&={n \choose k}p^k(1-p)^{n-k}\\
+\frac{\textrm{d}\mathcal{L}(p)}{\textrm{d}p}&={n \choose k}\biggl(kp^{k-1}(1-p)^{n-k} - (n-k)p^k(1-p)^{n-k=1}\biggr)\\
+&={n \choose k}p^{k-1}(1-p)^{n-k-1}\biggl(k(1-p) - (n-k)p\biggr)\\
+&={n \choose k}p^{k-1}(1-p)^{n-k-1}\biggl(k-kp -np+kp \biggr)\\
+&={n \choose k}p^{k-1}(1-p)^{n-k-1}\biggl(k-np\biggr)\\
+\end{aligned}
+$$
+Now to find the value of $p$ that maximizes $\mathcal{L}(p)$ we need the derivative to be set to 0.    Notice that one solution to this equation is when $k-np=0$.  But that simplifies to $p=\frac{k}{n}$.  In other words, the value of $p$ that is **most likely** (for an observed value of $k$) is the same as the sample proportion $\frac{k}{n}$.
+
+Wow!  a lot of math to say something that probably seems pretty obvious.  But the same idea can be applied to more complicated likelihood equations... **and** this places very few restrictions on the variables.  
+
+So, in summary, the Maximum Likelihood technique will find the parameters for the family of distributions that is most consistent with the data. (Whether you have chosen a good family to model your data is a different question entirely-- and it is not one that is answered by this technique)
+
+This kind of parameter fitting is the basis for all of the GLM approaches.  Let's identify a few key components.  We'll let $\mu_i$ denote the **actual** mean of the distribution from which the response value $y_i$ was drawn.  We let $x_ki$ denote the **value** of variable $X_k$ for observation $i$
+
+
+Then we have a relationship interconnecting a linear predictor on the right with a transformed $\mu_i$ on the left:
+
+$$
+g(\mu_i) = b_0 + b_1 x_{1i}+ b_2 x_{2i} + \cdots + \textrm{error}
+$$
+
+
+The values of $y_i$ (conditioned on the explanatories) are called the **random component**.
+
+The linear model on the right, $b_0 + b_1X_1 + b_2 X_2 + \cdots + b_p X_p$ is called the **systematic component**.  It's common to use $\eta$ to represet the output.  And then have (simplifying notation a bit to make the relationships easier to follow):
+
+$$
+\begin{aligned}
+\eta &= b_0 + b_1X_1 + b_2 X_2 + \cdots + b_p X_p\\
+g(\mu) &= \eta\\
+\textrm{P}(Y|X) &= \textrm{Some parameterized family that depends upon }\mu
+\end{aligned}
+$$
+
+The **family** of the random component distribution determines the type of Regression:
+
+Style             | Family            | Link function
+------------------|-------------------|------------------
+OLS               | Normal            | $\textrm{Identity}$
+Logistic          | Binomial          | $\textrm{logit}$
+Poisson           | Poisson           | $\ln()$
+Negative Binomial | Negative Binomial | $\ln()$
+
+**Note:** I'm including a typical link functions.  **Other Link functions are possible!**.  For example the **probit** link function is also fairly common in logistic regression.  (I'm not going to go into those details however.)
+
+## Poisson Distribution
+
+We loaded some Crab data from a 1996 Study on female crabs and the number of male "satellites" following them:
+
+```
+Color: 1: light medium
+       2: medium
+       3: dark medium
+       4: dark
+Spine Condition
+       1: Both good
+       2: One worn or broken
+       3: Both worn or broken
+Carapace Width (in cm)
+Weight in kilograms
+Number of Satellites (aka-- male's grouped around female hoping to mate)
+
+Data from Jane Brockmann, Zoology Department University of Floriday from Etcholog 102: 1-21, 1996
+```
+
+Let's load it and look at it:
+
+```{r}
+crab=read.table("https://personal.psu.edu/abs12/stat504/online/07_poisson/graphics/crab.txt")
+colnames(crab)=c("obs","color","spine","width","weight","n.sat")
+crab=crab[,-1] #Drop the observation column
+pairs(crab)
+```
+
+We did some exploratory data analysis and several interesting relationships were described in class.
+
+Here are some examples
+
+```{r}
+with(crab,{plot(table(color,spine))}) #Obvious relation... suggests age to me
+#As color gets darker spine conditions gets worse
+with(crab,plot(table(color,cut(width,5)))) #That's not consistent with age.. I would have thought
+# carapace width was associated with age... but small 
+with(crab,boxplot(width~color))
+# That highlights that it's the inverse of what I would have expected
+pairs(crab)
+# width and weight are, reasonably correlated
+with(crab,plot(table(color,cut(n.sat,5))))
+with(crab,(boxplot(n.sat~color)))
+# Seems to showcase Preference for lighter colors (with outliers)
+with(crab,(boxplot(n.sat~spine)))
+with(crab,plot(width,weight)) #Here we see a tight correlation between width and height
+```
+
+We wanted to use a Poisson distribution to model the number of male satellites:
+
+```{r}
+model=glm(data=crab,n.sat~width,family=poisson())
+
+plot(crab$width,jitter(crab$n.sat,0.2),cex=3,pch=20,col=rgb(0,0,0,1/4),ylab="N.sat (jittered)")
+points(pch=".",cex=5,col="blue",crab$width,fitted.values(model))
+```
+
+## Overdispersion
+
+The conditional distribution of $\textrm{n.sat}$ should be Poisson.  Which means the variance for $\textrm{n.sat}$ for a given value of $\textrm{width}$ should be the same as the mean.  We estimated this:
+
+```{r}
+approx=split(crab$n.sat,cut(crab$width,7))
+#A key thing to look for in Poisson regression is "overdispersion"
+# The idea is that in a Poisson regression the conditional distribution of Y shoudl be Poisson... this
+# this means the variance should equal the mean.  Let's bin n.sat by width and see what we get:
+sapply(approx,mean)
+sapply(approx,var)
+```
+
+Let's add in the approximations for the means:
+
+```{r,echo=FALSE}
+lowers=str_extract(names(approx),"\\([^,]+[,]")
+lowers=as.numeric(substring(lowers,2,nchar(lowers)-1))
+
+uppers=str_extract(names(approx),"[,][^\\]]+\\]")
+uppers=as.numeric(substring(uppers,2,nchar(uppers)-1))
+
+mids=(lowers+uppers)/2
+
+#mid.mus=sapply(mids,function(m){exp(sum(coef(model.nb)*c(1,m)))})
+#mid.vars=mid.mus+mid.mus^2/model.nb$theta
+mid.mus=sapply(mids,function(m){exp(sum(coef(model)*c(1,m)))})
+mid.vars=mid.mus
+```
+
+It's not bad at matching the means.  
+
+Let me add in X-s at 1 and 2 standard deviations above the mean-- both for the observed values and for what the Poisson model predicts:
+
+```{r}
+obs.means=sapply(approx,mean)
+obs.vars=sapply(approx,var)
+predict=function(x){prod(exp(c(1,x)*coef(model)))}
+Predict=Vectorize(predict)
+plot(crab$width,jitter(crab$n.sat,0.2),cex=3,pch=20,col=rgb(0,0,0,1/4),ylim=c(0,17),ylab="N.sat (jittered)")
+points(pch=".",cex=5,col="blue",crab$width,fitted.values(model)) #Fitted means
+points(pch=".",cex=5,col="red",mids,obs.means) #Observed means
+points(pch="x",cex=1.8,col="red",mids,obs.vars) #Observed vars
+points(pch="X",cex=1.8,col="Blue",mids,Predict(mids)) #Analagous Fitted means
+
+abline(v=union(lowers,uppers),lty=2,col="gray")
+```
+
+It wasn't really what we had hoped for... so we tried a family of distributions with a higher variance
+
+## Negative Binomial
+
+There are multiple formulations of the negative binomial distribution.  R can accomodate a couple of them.  My favorite
+
+A negative binomial situation is comprised of independent, dichotomous trials with constant probability of success, $p$.  The number of failures before the $r$th success are counted.
+
+Under this parameterization the formula is:
+
+$$
+P(X=k) = {r+k-1}{k}p^r(1-p)^k
+$$
+
+Note that the two parameter are the probability of success, $p$, and the number of succeses at which we stop counting, which is $r$.  The language R calls $r$ the $\textrm{size}$.
+
+Here's a typical graph:
+
+```{r}
+barplot(dnbinom(0:30,5,0.3),width=1,space=0,names=0:30)
+```
+
+The expected value and variance are:
+
+$$
+\begin{aligned}
+\mathbb{E}(X) &= \biggl(\frac{p}{1-p}\biggr)r & \textrm{odds} \times \textrm{# of successes}\\
+\textrm{VAR}(X) &= \biggl(\frac{1}{1-p}\biggr)\mathbb{E}(X)&\textrm{scaled Expected Value}\\
+\end{aligned}
+$$
+
+Note that $\frac{1}{1-p} \ge 1$ so the variance is higher than the expected value.
+
+Two common alternate parameterizations use 
+
+   *$\mu$ and $\alpha$ 
+   *$\mu$ and $\textrm{size}$
+   
+The only differences between those two are $\alpha = \frac{1}{r}$.  Sometimes $\alpha$ is called the $\textrm{shape}$ parameter.  The key idea is that 
+
+$$
+\begin{aligned}
+\mathbb{E}(X) &= \mu &\textrm{We specify the expected value}\\
+\textrm{VAR}(X) &= \mu + \alpha \mu^2\\
+&= \mu + \frac{1}{\textrm{r}}\mu^2
+\end{aligned}
+$$
+
+The $\textrm{size}$ parameterization is a bit unusual, but it's the one used by `glm.nb()` in the package `MASS`.  It is more common to call the second parameter the **dispersion** parameter, because it controls the amount of overdispersion (relative to the Poisson distribution) you expect to find in the variance.  Note that $\alpha = 0$ reduces to the Poisson distribution... so the negative binomial can do **no worse** than the Poisson when it comes to over dispersion.  Also notice that if we know $\mu$ and $r$ (or equivalently $\mu$ and $\alpha$) then we can find the values for $p$ and $r$ (I leave that as an exercise in mathematics for the curious.... it's not too hard though... start with $\mu = \frac{p}{1-p)r}).
+
+```{r}
+library(MASS)
+model.nb=glm.nb(data=crab,n.sat~width)
+summary(model.nb)
+```
+
+Notice the dispersion paramter (they call it $\theta$)
+
+Now let's compare again:
+
+```{r}
+mid.mus=sapply(mids,function(m){exp(sum(coef(model.nb)*c(1,m)))})
+mid.vars=mid.mus+mid.mus^2/model.nb$theta
+
+plot(crab$width,jitter(crab$n.sat,0.2),cex=3,pch=20,col=rgb(0,0,0,1/4),ylim=c(0,17),ylab="N.sat (jittered)")
+points(pch=".",cex=5,col="blue",crab$width,fitted.values(model.nb)) #Fitted means
+points(pch=".",cex=5,col="red",mids,obs.means) #Observed means
+points(pch="x",cex=1.8,col="red",mids,obs.vars) #Observed vars
+
+points(pch="x",cex=1.8,col="Blue",mids,mid.vars) #Analagous Fitted vars for NB
+
+abline(v=union(lowers,uppers),lty=2,col="gray")
+```
+
+
+## R code used in class
+
+```
+barplot(dpois(0:10,3),space=0,width=1,names=0:10)
+pois.lik=function(mu,k){exp(-mu)*mu^k/factorial(k)}
+curve(pois.lik(x,3),0,10)
+curve(dpois(3,x),0,10)
+observed=rpois(10,3)
+barplot(table(observed))
+pois.lik(3,observed) #Likelihood of each observation
+
+pois.lik2=function(mu,k){prod(exp(-mu)*mu^k/factorial(k))} #Fixed for multiple observations
+Pois.lik2=Vectorize(pois.lik2,"mu") #Vectorized for graphing
+curve(Pois.lik2(x,observed),0,10,ylab="Likelihood",xlab="Value of Mu")
+curve(log(Pois.lik2(x,observed)),0,10,ylab="Likelihood",xlab="Value of Mu")
+
+df <- read.csv("https://stats.idre.ucla.edu/stat/data/binary.csv")
+glm(data=df,admit~gre,family=binomial())
+
+# Everybody uses the crab data
+crab=read.table("~/dsci3701/Lectures/Week 7/crab.txt")
+crab=read.table("https://personal.psu.edu/abs12/stat504/online/07_poisson/graphics/crab.txt")
+colnames(crab)=c("obs","color","spine","width","weight","n.sat")
+crab=crab[,-1] #Drop the observation column
+pairs(crab)
+#Obs: Observation Number
+#Color: 1: light medium
+#       2: medium
+#       3: dark medium
+#       4: dark
+#Spine Condition
+#       1: Both good
+#       2: One worn or broken
+#       3: Both worn or broken
+#Carapace Width (in cm)
+#Weight in kilograms
+#Number of Satellites (aka-- male's grouped around female hoping to mate)
+#Data from Jane Brockmann, Zoology Department University of Floriday from Etcholog 102: 1-21, 1996
+with(crab,{plot(table(color,spine))}) #Obvious relation... suggests age to me
+#As color gets darker spine conditions gets worse
+with(crab,plot(table(color,cut(width,5)))) #That's not consistent with age.. I would have thought
+# carapace width was associated with age... but small 
+with(crab,boxplot(width~color))
+# That highlights that it's the inverse of what I would have expected
+pairs(crab)
+# width and weight are, reasonably correlated
+with(crab,plot(table(color,cut(n.sat,5))))
+with(crab,(boxplot(n.sat~color)))
+# Seems to showcase Preference for lighter colors (with outliers)
+with(crab,(boxplot(n.sat~spine)))
+model=glm(data=crab,n.sat~width,family=poisson())
+
+plot(crab$width,jitter(crab$n.sat,0.2),cex=3,pch=20,col=rgb(0,0,0,1/4))
+points(pch=".",cex=5,col="blue",crab$width,fitted.values(model))
+approx=split(crab$n.sat,cut(crab$width,7))
+#A key thing to look for in Poisson regression is "overdispersion"
+# The idea is that in a Poisson regression the conditional distribution of Y shoudl be Poisson... this
+# this means the variance should equal the mean.  Let's bin n.sat by width and see what we get:
+
+sapply(approx,mean)
+#(21,22.8] (22.8,24.6] (24.6,26.4] (26.4,28.1] (28.1,29.9] (29.9,31.7] (31.7,33.5] 
+#1.000000    1.312500    2.711864    3.146341    4.666667    4.857143    4.500000 
+sapply(approx,var)
+#(21,22.8] (22.8,24.6] (24.6,26.4] (26.4,28.1] (28.1,29.9] (29.9,31.7] (31.7,33.5] 
+#3.000000    5.963710    9.587960    6.478049   16.076923    7.142857   12.500000 
+
+#Ooof.. that doesn't look good.  
+
+#Quick negative binomial:
+# Number of failures before the r'th success
+#P(X=k) = (k+r-1 choose k) p^r(1-p)^k
+barplot(dnbinom(0:30,5,0.3),width=1,space=0,names=0:30)
+#X~NB(r,p) [r is number of successes, prob of success per trial is p]
+#In the language of the variable names size is r and prob is p
+# E(X) = p/(1-p)* r [The odds times the number of failures]
+# VAR(X) = 1/(1-p) E(X) [note 0 < p < 1 so VAR(X) > E(X)]
+
+# THe GLM ALSO
+# Also uses log link
+# model is ALSO log(mu) = b0 + b1 X1 + ...
+# BUT the log likelihood formula is different so the fit is different.
+library(MASS)
+model.nb=glm.nb(data=crab,n.sat~width)
+# There are SEVERAL parameterizations of negative binomial Many regression techniques use a different 
+# parameterization than the one I provided.  For example, R also allows Nbinom(mu,size) where mu
+# is the expected value and var(X) = mu + alpha mu^2 (and alpha = 1/size)
+# Prob = size/(size+mu) under the alternate mu 
+
+# The key thing here is that the estimator has to estimate TWO parameters.  One is called the DISPERSION
+# Parameter because it influences the change inv ariance
+df$rank.minus=df$rank-1
+
+glm(data=df,rank.minus~gre,family=poisson())
+
+plot(crab$width,jitter(crab$n.sat,0.2),cex=3,pch=20,col=rgb(0,0,0,1/4))
+points(pch=".",cex=5,col="blue",crab$width,fitted.values(model))
+points(pch=".",cex=5,col="green",crab$width,fitted.values(model.nb))
+approx=split(crab$n.sat,cut(crab$width,7))
+lowers=str_extract(names(approx),"\\([^,]+[,]")
+lowers=as.numeric(substring(lowers,2,nchar(lowers)-1))
+
+uppers=str_extract(names(approx),"[,][^\\]]+\\]")
+uppers=as.numeric(substring(uppers,2,nchar(uppers)-1))
+
+mids=(lowers+uppers)/2
+
+mid.mus=sapply(mids,function(m){exp(sum(coef(model.nb)*c(1,m)))})
+mid.vars=mid.mus+mid.mus^2/model.nb$theta
+#Compare
+mid.vars
+sapply(approx,var)
+sapply(approx,length)
+# Much better on the low-end.  And cetainly a better fit on some of the bigger
+```

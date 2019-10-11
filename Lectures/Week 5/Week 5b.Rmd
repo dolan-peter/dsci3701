@@ -1,0 +1,542 @@
+---
+title: "Week 5"
+author: "Peter Dolan"
+date: "9/22/2019"
+runtime: shiny
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(reticulate)
+#library(shiny)
+use_python("/home/shiny/.virtualenvs/r-reticulate/bin/python",required=TRUE)
+matplotlib<-import("matplotlib")
+matplotlib$use("Agg",force=TRUE) #Enable the matplotlib rendering engine.
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Parameter Space
+
+We have already seen an example of a **parameterized distribution**.  (The multivariate normal distribution example you played with earlier).  
+
+Let's go back to the **line of best fit** that we all know and love from **linear regression**.  A line is a parameterized **model** with two parameters:
+
+* Intercept
+* Slope
+
+If didn't already have the formula, we *could* apply these techniques to get pretty close to the line of best fit.  Our function that we **wish to minimize** would be the sum of squares of the residuals.  So we need our **observations first**, and then we could calculate the sum of squares of the errors... In other words:  Two variables as input, one as output... Just exactly the sort of thing we've already been doing.  Let's give it a try with some random data... first, here's the point cloud:
+
+```{r}
+set.seed(1) # Ensure we get the same values:
+x=runif(100)
+y=2+3*x +rnorm(100,0,0.3)
+plot(x,y,pch=20,cex=2)
+```
+
+I will invert the residuals function to make the minima (now a maxima) a bit easier to see (inverting it makes the minima a maxima... so look for the peak).  Note-- the slope is too gradual near the peak to be able to see easily, so I added the "exponentiate" option which will make the peak substantially easier to locate (but you might enjoy turning it off).  
+
+I'm also including a **countour map**.  It shows the same basic information as the perspective plot but it does so in 2D-- the lines on a contour map indicate **level sets**-- These are places that all have the same "height"" (aka have the same output). Exponentiation will control where the algorithm places the level sets... just play with it a bit... you'll get the idea.
+
+**Warning:**  The red dot representing the sum of squares for your choice of slope and intercept (in the left graph) is graphed AFTER the surfaced plot-- this means it will always be visible-- even if it should be hidden by the surface-- this can make the behavior of the redpoint look a bit... odd.
+
+
+```{r,echo=FALSE,eval=FALSE}
+eval(parse(text=FitControls("")))
+```
+
+```{r,echo=FALSE}
+fluidRow(
+  column(width=4,sliderInput("model.theta","Theta",min=-180,max=180,val=6,step=1)),
+  column(width=4,sliderInput("model.phi","Phi",min=-180,max=180,val=24,step=1))
+)         
+fluidRow(
+  column(width=4,sliderInput("model.intercept","Intercept",min=0.4,max=3.6,step=0.1,val=0)),
+  column(width=4,sliderInput("model.slope","Slope",min=-0.4,max=5.1,step=0.1,val=1))
+)
+checkboxInput("model.exponentiate","Exponentiate",val=TRUE)
+
+fluidRow(
+  column(width=8,plotOutput("paramExplore")),
+  column(width=4,plotOutput("lineFit"))
+)
+plotOutput("paramContour")
+```
+
+```{r context="server",echo=FALSE}
+
+output$lineFit=renderPlot({
+  set.seed(1) # Ensure we get the same values:
+  x=runif(100)
+  y=2+3*x +rnorm(100,0,0.3)
+  b=input$model.intercept
+  m=input$model.slope
+  plot(x,y,pch=20,cex=2)
+  abline(lty=2,col="red",lwd=3,b,m)
+})
+output$paramExplore=renderPlot({
+    set.seed(1) # Ensure we get the same values:
+  x=runif(100)
+  y=2+3*x +rnorm(100,0,0.3)
+
+  .f=function(b,m){sum((y-b-m*x)^2)}
+  .g=Vectorize(.f)
+  #b.min=input$model.min.b
+  #b.max=input$model.max.b
+  #m.min=input$model.min.m
+  #m.max=input$model.max.m
+  b.min=0.4
+  b.max=3.6
+  m.min=-0.4
+  m.max=5.1
+  b=seq(b.min,b.max,length.out=30)
+  m=seq(m.min,m.max,length.out=30)
+  z=outer(b,m,.g)*-1
+  ss=.g(input$model.intercept,input$model.slope)*-1
+  if(input$model.exponentiate){
+      z=exp(z)
+      ss=exp(ss)
+  }
+  gx=input$model.intercept
+  gy=input$model.slope
+  pmat=persp(b,m,z,theta=input$model.theta,phi=input$model.phi,r=1)
+  points(trans3d(gx,gy,ss,pmat),cex=2,col="red",pch=20)
+  })
+output$paramContour=renderPlot({
+  set.seed(1) # Ensure we get the same values:
+  x=runif(100)
+  y=2+3*x +rnorm(100,0,0.3)
+
+  .f=function(b,m){sum((y-b-m*x)^2)}
+  .g=Vectorize(.f)
+  #b.min=input$model.min.b
+  #b.max=input$model.max.b
+  #m.min=input$model.min.m
+  #m.max=input$model.max.m
+  b.min=0.4
+  b.max=3.6
+  m.min=-0.4
+  m.max=5.1
+  b=seq(b.min,b.max,length.out=100)
+  m=seq(m.min,m.max,length.out=100)
+  z=outer(b,m,.g)*-1
+  ss=.g(input$model.intercept,input$model.slope)*-1
+  if(input$model.exponentiate){
+      z=exp(z)
+      ss=exp(ss)}
+  gx=input$model.intercept
+  gy=input$model.slope
+  contour(b,m,z)
+  points(gx,gy,cex=2,col="red",pch=20)
+  })
+```
+
+
+The nice thing about a contour map is that whether you're looking for a maximum or a minimum the view will be the same.
+
+We used the **sum of squares** of the residuals in the last example-- this ends up making a line that does a good job of saying where the "mean" of $y$ should be for a given $x$.  This approach does not really depend upon the distribution of the response variable, but it's usefulness-- as measured by being a good description of central tendencies, or as being able to make reasonable observations about the relationship between the explantory variables and the response variable may be compromised.  Two of the first things you should check after building a linear model are 
+
+* That the residuals are normally distributed
+* That the variables are homoscedastic
+
+If the latter case is violated (which means that variance in $y$ depends upon the specific values of the explanatory variables), then we have two common approaches
+
+1. Transform the response (or the explanatory variables) until the data is homoscedastic
+1. Use a more sophisticated regression technique like Generalalized Linear Models.
+
+We'll discuss both of those a bit.  The first might be as simple as taking the log of the response values or raising it some variance stabilizing power (like a square root) before attempting regression.  Interpreting the details of the model after such transformations can be challenging, but in many cases this is both easy and straighforward.
+
+## Using a different measure of fit
+
+However... it is possible for us to use different measures of fit.  One example would be
+
+$$
+\sum \left|y_i - \widehat{y_i}\right|
+$$
+Here, instead of the sum of squares of the residuals, we are finding the sum of the absolute values of the residuals:
+
+```{r,echo=FALSE}
+fluidRow(
+  column(width=4,sliderInput("model.theta2","Theta",min=-180,max=180,val=6,step=1)),
+  column(width=4,sliderInput("model.phi2","Phi",min=-180,max=180,val=24,step=1))
+)         
+fluidRow(
+  column(width=4,sliderInput("model.intercept2","Intercept",min=0.4,max=3.6,step=0.1,val=0)),
+  column(width=4,sliderInput("model.slope2","Slope",min=-0.4,max=5.1,step=0.1,val=1))
+)
+checkboxInput("model.exponentiate2","Exponentiate",val=TRUE)
+
+fluidRow(
+  column(width=8,plotOutput("paramExplore2")),
+  column(width=4,plotOutput("lineFit2"))
+)
+plotOutput("paramContour2")
+```
+```{r context="server",echo=FALSE}
+
+output$lineFit2=renderPlot({
+  set.seed(1) # Ensure we get the same values:
+  x=runif(100)
+  y=2+3*x +rnorm(100,0,0.3)
+  b=input$model.intercept2
+  m=input$model.slope2
+  plot(x,y,pch=20,cex=2)
+  abline(lty=2,col="red",lwd=3,b,m)
+})
+output$paramExplore2=renderPlot({
+  set.seed(1) # Ensure we get the same values:
+  x=runif(100)
+  y=2+3*x +rnorm(100,0,0.3)
+
+  .f=function(b,m){sum(abs(y-b-m*x))}
+  .g=Vectorize(.f)
+  #b.min=input$model.min.b
+  #b.max=input$model.max.b
+  #m.min=input$model.min.m
+  #m.max=input$model.max.m
+  b.min=0.4
+  b.max=3.6
+  m.min=-0.4
+  m.max=5.1
+  b=seq(b.min,b.max,length.out=30)
+  m=seq(m.min,m.max,length.out=30)
+  z=outer(b,m,.g)*-1
+  sa=.g(input$model.intercept2,input$model.slope2)*-1
+  if(input$model.exponentiate2){
+      z=exp(z)
+      sa=exp(sa)}
+  #ss=(ss-min(z))/(max(z)-min(z)) #Convert to [0,1]
+  #gx=(input$model.intercept-b.min)/(b.max-b.min)
+  #gy=(input$model.slope-m.min)/(m.max-m.min)
+  gx=input$model.intercept2
+  gy=input$model.slope2
+  pmat=persp(b,m,z,theta=input$model.theta2,phi=input$model.phi2,r=1)
+  points(trans3d(gx,gy,sa,pmat),cex=2,col="red",pch=20)
+  })
+output$paramContour2=renderPlot({
+    set.seed(1) # Ensure we get the same values:
+  x=runif(100)
+  y=2+3*x +rnorm(100,0,0.3)
+
+  .f=function(b,m){sum(abs(y-b-m*x))}
+  .g=Vectorize(.f)
+  #b.min=input$model.min.b
+  #b.max=input$model.max.b
+  #m.min=input$model.min.m
+  #m.max=input$model.max.m
+  b.min=0.4
+  b.max=3.6
+  m.min=-0.4
+  m.max=5.1
+  b=seq(b.min,b.max,length.out=100)
+  m=seq(m.min,m.max,length.out=100)
+  z=outer(b,m,.g)*-1
+  sa=.g(input$model.intercept2,input$model.slope2)*-1
+  if(input$model.exponentiate2){
+      z=exp(z)
+      sa=exp(sa)}
+  gx=input$model.intercept2
+  gy=input$model.slope2
+  contour(b,m,z)
+  points(gx,gy,cex=2,col="red",pch=20)
+  })
+```
+
+As before I have inverted the surface... you truly want the "lowest point", but it's easier to see what's happening if we make this behave like we are seeking the highest point-- the contour plot would looke identical-- only the numbers labeling the contours would change sign-- but the curves would remain the same.  Interestingly, this measure produces a result that predicts the **median** of the $y$ values rather than the **mean**.
+
+You'll notice in this case that the surface showing the measure of best fit is a bit more peaked when non exponentiated-- but the line ends up being pretty much identical-- this is because the error distribution is symmetric so the mean and median are the same.
+
+Let's look at a different set of points where the distribution for each $y$-value is not normal, but is instead a skewed distribution:
+
+```{r,echo=FALSE}
+fluidRow(
+  column(width=4,sliderInput("model.theta3","Theta",min=-180,max=180,val=6,step=1)),
+  column(width=4,sliderInput("model.phi3","Phi",min=-180,max=180,val=24,step=1))
+)         
+fluidRow(
+  column(width=4,sliderInput("model.intercept3","Intercept",min=0,max=8,step=0.1,val=0)),
+  column(width=4,sliderInput("model.slope3","Slope",min=0,max=8,step=0.1,val=1))
+)
+
+checkboxInput("model.exponentiate3","Exponentiate",val=TRUE)
+
+fluidRow(
+  column(width=8,plotOutput("paramExplore3")),
+  column(width=4,plotOutput("lineFit3"))
+)
+plotOutput("paramContour3")
+```
+```{r context="server",echo=FALSE}
+
+output$lineFit3=renderPlot({
+  set.seed(1) # Ensure we get the same values:
+  x=runif(100)
+  y=2+3*x +rgamma(100,1,0.3)
+  b=input$model.intercept3
+  m=input$model.slope3
+  plot(x,y,pch=20,cex=2)
+  abline(lty=2,col="red",lwd=3,b,m)
+  abline(lm(y~x),col="blue",lty=2,lwd=3)
+})
+output$paramExplore3=renderPlot({
+  set.seed(1) # Ensure we get the same values:
+  x=runif(100)
+  y=2+3*x +rgamma(100,1,0.3)
+
+  .f=function(b,m){sum(abs(y-b-m*x))}
+  .g=Vectorize(.f)
+  #b.min=input$model.min.b
+  #b.max=input$model.max.b
+  #m.min=input$model.min.m
+  #m.max=input$model.max.m
+  b.min=0
+  b.max=8
+  m.min=0
+  m.max=8
+  b=seq(b.min,b.max,length.out=30)
+  m=seq(m.min,m.max,length.out=30)
+  z=outer(b,m,.g)*-1
+  sa=.g(input$model.intercept3,input$model.slope3)*-1
+  if(input$model.exponentiate3){
+      z=exp(z)
+      sa=exp(sa)}
+  #ss=(ss-min(z))/(max(z)-min(z)) #Convert to [0,1]
+  #gx=(input$model.intercept-b.min)/(b.max-b.min)
+  #gy=(input$model.slope-m.min)/(m.max-m.min)
+  gx=input$model.intercept3
+  gy=input$model.slope3
+  pmat=persp(b,m,z,theta=input$model.theta3,phi=input$model.phi3,r=1)
+  points(trans3d(gx,gy,sa,pmat),cex=2,col="red",pch=20)
+  })
+output$paramContour3=renderPlot({
+    set.seed(1) # Ensure we get the same values:
+  x=runif(100)
+  y=2+3*x +rgamma(100,1,0.3)
+
+
+  .f=function(b,m){sum(abs(y-b-m*x))}
+  .g=Vectorize(.f)
+  #b.min=input$model.min.b
+  #b.max=input$model.max.b
+  #m.min=input$model.min.m
+  #m.max=input$model.max.m
+  b.min=0
+  b.max=8
+  m.min=0
+  m.max=8
+  b=seq(b.min,b.max,length.out=100)
+  m=seq(m.min,m.max,length.out=100)
+  z=outer(b,m,.g)*-1
+  sa=.g(input$model.intercept3,input$model.slope3)*-1
+  if(input$model.exponentiate3){
+      z=exp(z)
+      sa=exp(sa)}
+  gx=input$model.intercept3
+  gy=input$model.slope3
+  contour(b,m,z)
+  points(gx,gy,cex=2,col="red",pch=20)
+  })
+```
+
+The usual lineof best fit is in blue, the fit to the model using this modified approach is, as usual, in red.  The absolute value-of-the-residuals-approach is more robust-- it is resistant to outliers.
+
+## Ridge Regression
+
+(With thanks to https://www.analyticsvidhya.com/blog/2017/06/a-comprehensive-guide-for-linear-ridge-and-lasso-regression/)
+
+Ridge regression uses $L2$ normalization.  If we think of our model as being of the following form:
+
+$$
+\widehat{y} = b_0 + b_1 x_1 + b_2x_2 + \cdots + b_m x_m
+$$
+
+Then the residuals are $y_i - \widehat{y}$.  Many books use $\varepsilon_i=y_i-\widehat{y}$.  In orderinary least squares you would minimize 
+
+$$
+\sum_{i=1}^n \varepsilon_i^2
+$$
+In ridge regression we have a different **cost function:**
+
+$$
+\sum_{i=1}^n \varepsilon_i^2 + \sum_{j=1}^m b_j^2
+$$
+```{r,echo=FALSE}
+fluidRow(
+  column(width=4,sliderInput("model.theta4","Theta",min=-180,max=180,val=6,step=1)),
+  column(width=4,sliderInput("model.phi4","Phi",min=-180,max=180,val=24,step=1))
+)         
+fluidRow(
+  column(width=3,sliderInput("model.intercept4","Intercept",min=-2,max=2,step=0.1,val=0)),
+  column(width=3,sliderInput("model.slope4","Slope",min=-2,max=2,step=0.1,val=1)),
+  column(width=3,sliderInput("lambda","Lambda",min=0,max=1,step=0.1,val=0.5))
+)
+
+checkboxInput("model.exponentiate4","Exponentiate",val=TRUE)
+
+fluidRow(
+  column(width=8,plotOutput("paramExplore4")),
+  column(width=4,plotOutput("lineFit4"))
+)
+plotOutput("paramContour4")
+```
+```{r context="server",echo=FALSE}
+
+output$lineFit4=renderPlot({
+  set.seed(1) # Ensure we get the same values:
+  x=runif(100)
+  y=2+3*x +rgamma(100,1,0.3)
+  x=(x-mean(x))/sd(x)
+  y=(y-mean(y))/sd(y)
+  b=input$model.intercept4
+  m=input$model.slope4
+  plot(x,y,pch=20,cex=2)
+  abline(lty=2,col="red",lwd=3,b,m)
+  abline(lm(y~x),col="blue",lty=2,lwd=3)
+})
+output$paramExplore4=renderPlot({
+  set.seed(1) # Ensure we get the same values:
+  x=runif(100)
+  y=2+3*x +rgamma(100,1,0.3)
+  x=(x-mean(x))/sd(x)
+  y=(y-mean(y))/sd(y)
+  
+  
+  .f=function(b,m){sum((y-b-m*x)^2)+input$lambda*sum(c(b,m)^2)}
+  .g=Vectorize(.f)
+  #b.min=input$model.min.b
+  #b.max=input$model.max.b
+  #m.min=input$model.min.m
+  #m.max=input$model.max.m
+  b.min=-2
+  b.max=2
+  m.min=-2
+  m.max=2
+  b=seq(b.min,b.max,length.out=30)
+  m=seq(m.min,m.max,length.out=30)
+  z=outer(b,m,.g)*-1
+  sa=.g(input$model.intercept4,input$model.slope4)*-1
+  if(input$model.exponentiate4){
+      z=exp(z)
+      sa=exp(sa)}
+  #ss=(ss-min(z))/(max(z)-min(z)) #Convert to [0,1]
+  #gx=(input$model.intercept-b.min)/(b.max-b.min)
+  #gy=(input$model.slope-m.min)/(m.max-m.min)
+  gx=input$model.intercept4
+  gy=input$model.slope4
+  pmat=persp(b,m,z,theta=input$model.theta4,phi=input$model.phi4,r=1)
+  points(trans3d(gx,gy,sa,pmat),cex=2,col="red",pch=20)
+  })
+output$paramContour4=renderPlot({
+    set.seed(1) # Ensure we get the same values:
+  x=runif(100)
+  y=2+3*x +rgamma(100,1,0.3)
+  x=(x-mean(x))/sd(x)
+  y=(y-mean(y))/sd(y)
+
+  .f=function(b,m){sum((y-b-m*x)^2)+input$lambda*sum(c(b,m)^2)}
+  .g=Vectorize(.f)
+  #b.min=input$model.min.b
+  #b.max=input$model.max.b
+  #m.min=input$model.min.m
+  #m.max=input$model.max.m
+  b.min=-2
+  b.max=2
+  m.min=-2
+  m.max=2
+  b=seq(b.min,b.max,length.out=100)
+  m=seq(m.min,m.max,length.out=100)
+  z=outer(b,m,.g)*-1
+  sa=.g(input$model.intercept4,input$model.slope4)*-1
+  if(input$model.exponentiate4){
+      z=exp(z)
+      sa=exp(sa)}
+  gx=input$model.intercept4
+  gy=input$model.slope4
+  contour(b,m,z)
+  points(gx,gy,cex=2,col="red",pch=20)
+  })
+```
+
+This is, unfortunately a bit boring.  The problem is that standardizing x and y ensures that $\left(\overline{X},\overline{Y}\right)=(0,0)$.  Which means that $b=0$.  That means we really only have 1 unknown.
+
+```{r}
+library(glmnet)
+library(scatterplot3d)
+set.seed(1) # Ensure we get the same values:
+x1=runif(100)
+x2=runif(100)
+y=2+3*x1 - 2*x2 +rgamma(100,1,0.3)
+scatterplot3d(x1,x2,y)
+x=cbind(x1,x2)
+#x1=(x-mean(x1))/sd(x1)
+#x2=(x-mean(x2))/sd(x2)
+#y=(y-mean(y))/sd(y)
+#dim(x)=c(100,1)
+dim(y)=c(100,1)
+
+#lambdas <- 10^seq(10, -2, length = 100) #Sequence of lambda values
+ridge.model<-glmnet(x,y,alpha=0,lambda=0.5)
+coefficients(ridge.model)
+
+coefficients(lm(y~x1+x2))
+```
+
+Notice the differences in the coefficients this time around.
+
+If we set lambda to 0 then we would recover the ordinary least squares regression:
+
+```{r}
+ridge.model<-glmnet(x,y,alpha=0,lambda=0)
+coefficients(ridge.model)
+```
+
+## Colinearity
+
+When explanatory variables exhibit multicollinearity the variances of the corresponding model parameters can be very large-- so it's relatively common for the estimate to be quite a ways away from the true value:
+
+```{r}
+set.seed(1) # Ensure we get the same values:
+x1=runif(100)
+#x2=runif(100)
+x2=2*x1+runif(100,-0.1,0.1)
+y=2+3*x1 - 2*x2 +rnorm(100,0,1)
+scatterplot3d(x1,x2,y,type="h")
+summary(lm(y~x1+x2))
+```
+
+Normal linear regression doesn't do a bad job here... but look at the variance on the coefficent for $x_1$.  We can try ridge regression (I'm not going deeply into this):  Instead of one value of lambda... let's use several:
+
+```{r}
+x=cbind(x1,x2)
+dim(y)=c(100,1)
+lambdas <- 10^seq(3, -2, by = -.1)
+ridge.model<-glmnet(x,y,alpha=0,lambda=lambdas)
+coefs=coefficients(ridge.model)
+head(t(coefs))
+tail(t(coefs))
+cv_fit<-cv.glmnet(x,y,alpha=0,lambda=lambdas) #cross validation with multiple lambdas
+plot(cv_fit)
+```
+
+We see that our results are better for a lambda just a bit above -2:
+
+```{r,eval=FALSE}
+fit <- cv_fit$glmnet.fit
+optimal.lambda=cv_fit$lambda.min
+optimal.lambda
+
+y_predicted <- predict(fit, s = opt_lambda, newx = x)
+
+# Sum of Squares Total and Error
+sst <- sum((y - mean(y))^2)
+sse <- sum((y_predicted - y)^2)
+
+# R squared
+rsq <- 1 - sse / sst
+rsq
+# borrowed from https://drsimonj.svbtle.com/ridge-regression-with-glmnet
+```
+
+## Lasso Regression
+
+Tends to pick one coefficient and toss out the others.

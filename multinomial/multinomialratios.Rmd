@@ -103,7 +103,7 @@ output$density2=renderPlot({
   tmp<-make.table(n,input$p,input$q)
   scale=attr(tmp$index,"scale")
   t2<-aggregate(c(tmp$count),by=list(c(tmp$index)),sum)
-  drop=-1*c(1,nrow(t2))
+  drop=-1*c(nrow(t2)) #Drop infinity
   x=t2[drop,1]/scale
   #theta=atan2(t2[drop,1],scale)
   p=t2[drop,2]

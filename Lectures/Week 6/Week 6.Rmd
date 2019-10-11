@@ -1,0 +1,722 @@
+---
+title: "Week 6"
+author: "Peter Dolan"
+date: "9/29/2019"
+output: 
+  html_document:
+    toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(magrittr)
+library(reticulate)
+use_python("/home/dolanp/.virtualenvs/r-reticulate/bin/python",required=TRUE) #force Python env.
+matplotlib<-import("matplotlib")
+matplotlib$use("Agg",force=TRUE) #Enable the matplotlib rendering engine.
+
+```
+
+## Overview
+
+This week we are going to work our way up to undertanding more sophisticated regression techniques.  We will begin by exploring **logistic regression**.
+
+**Key Points:**
+
+* Background for Logistic Regression
+* Examples of performing Logistic Regression
+* Visualization Techniques
+   * Jitter
+   * Transparency
+   * Example of using `Plotly` to make an interactive graph
+* Binning Data
+   * Use of `cut` and `quantile`
+* Machine Learning Concepts related to categorization
+
+
+## Logistic Regression
+
+Let's get a bit of background first.  I go into a bit more detail in the **[regression tutorial](https://github.umn.edu/dolan118/Regression.git)**.  Here we will summarize a bit of what you'll read in more detail.
+
+Consider the following situation:
+
+* The response variable is dichotomous.  We'll model that with 0 and 1. 
+* The values of various explanatory variables are associated with the value of the resonse variable.
+
+For example, suppose that we are measuring an outcome that can be summarized with a simple yes/no answer.  For example, how likely is it that a particular applicant to UCLA is going to be admitted?
+
+Notice there are only two possibilities:
+
+* The applicant is admitted
+* The applicant is not admitted
+
+Let's further suppose that there are factors influencing the probability of being admitted.
+
+We're going to base much of what we're doing off of [A nice blog post by Towards Data Science](https://towardsdatascience.com/simply-explained-logistic-regression-with-example-in-r-b919acb1d6b3).
+
+Let's pull the data from UCLA:
+
+```{r}
+df <- read.csv("https://stats.idre.ucla.edu/stat/data/binary.csv")
+```
+
+Now let's look at what we have:
+
+```{r}
+colnames(df)
+str(df)
+summary(df)
+barplot(table(df$admit))
+boxplot(df$gre,ylab="GRE score")
+boxplot(df$gpa,ylab="GPA")
+boxplot(df$rank,ylab="High School Rank")
+```
+
+**Solicit suggestions for how to look at different possiblities
+
+```{r}
+pairs(df) #one possibility
+```
+
+Let's look purely at the relationship between `admit` and `gre`
+
+```{r}
+with(df,plot(admit~gre,pch=".",cex=2,col=rgb(0,0,0,1/4)))
+```
+
+**That's** not helpful.  What to try?
+
+```{r}
+with(df,plot(jitter(admit,0.1)~jitter(gre),pch=".",cex=3,col=rgb(0,0,0,1/4))) #discuss choices of transparency and jitter
+```
+
+Here's another way to look at *some* differences:
+
+```{r}
+boxplot(data=df,gre~admit)
+```
+
+Certainly looks as if there is a **difference** between the GRE scores of those who were admitted and those who were not.  Let's try a *t-test*:
+
+```{r}
+groups<-split(df$gre,df$admit)
+not.admitted.gre=groups[[1]]
+admitted.gre=groups[[2]]
+t.test(admitted.gre,not.admitted.gre)
+```
+
+What does this tell us?
+
+Only that there is a difference... and we're looking at this **backwards** if our goal is to **predict** admittance.
+
+Back to the jitter-plot:
+
+```{r}
+with(df,plot(jitter(admit,0.1)~jitter(gre),pch=".",cex=3,col=rgb(0,0,0,1/4))) #discuss choices of transparency and jitter
+```
+
+Consider different possible values of `gre`.  Let's suppose that the values of GRE influence your probability of getting accepted.  It's *only* an influence... nothing deterministic-- you aren't **guaranteed** admission if you have a good GRE, nor are you doomed if your GRE is poor... but your chances *should* change.
+
+Let's "bin up" the values and make localized boxplot:
+
+**how would you go about doing this?** (spend 5/10 minutes asking)
+
+```{r}
+bins=cut(df$gre,10)
+sample<-split(df$admit,bins)
+probs=sapply(sample,sum)/sapply(sample,length)
+with(df,plot(jitter(admit,0.1)~jitter(gre),pch=".",cex=3,col=rgb(0,0,0,1/4))) #discuss choices of transparency and jitter
+lowers=as.numeric(substr(levels(bins),2,4))
+uppers=as.numeric(substr(levels(bins),6,8))
+mids=(lowers+uppers)/2
+points(mids,probs,col="red",pch=20,cex=3)
+abline(lty=2,col="gray",v=lowers)
+```
+
+Now what do we notice?
+
+1. There is a generally positive trend.
+2. Inside each set of vertical lines we are kinda/sorta approximating a **binomial distribution**
+
+## Review
+
+A Binomial Distribution is determiend by two parameters:
+
+* $n$ (the number of independent trials)
+* $p$ (the probability of success)
+
+There are five conditions necessary for a situation to be binomial
+
+* There are a **fixed number** of trials ($n$)
+* The trials are **dichotomous** (resulting in success or failure)
+* The trials are **independent**.
+* The probability of success, $p$, is **constant**
+* The random variable is the **count** of successes
+
+That's exactly what we're approximating here.  If we had **lots** of data-- then every `gre` score would appear multiple times and for each `gre` score we would have a distinct binomial distribution.  Recall that for $X \sim B(n,p)$:
+
+$$
+\mathbb{E}\left(\frac{X}{n}\right) = p
+$$
+
+Also recall that **linear regression estimates $P(Y|X)$**.  And finally connect the dots **discuss in class with great seriousness**.
+
+The problem with using pure linear regression on this scenario is that lines (whose slope is not 0) have $y$-values that encompass $(-\infty,\infty)$.  Let's do it anyway (and pay particular attention to the code):
+
+```{r}
+with(df,plot(jitter(admit,0.1)~jitter(gre),pch=".",cex=3,col=rgb(0,0,0,1/4))) #discuss choices of transparency and jitter
+points(mids,probs,col="red",pch=20,cex=3)
+abline(lty=2,col="gray",v=lowers)
+abline(lm(data=df,admit~gre),col="skyblue",lwd=3)
+```
+
+Not bad is it?  BUT.... we know that $0 \le p \le 1$.  This line does pretty well for this approximation of this data set but it's, perhaps, not the most flexible.  Can we do better?  Can we do better in a way that offers more reasonable extrapolations?
+
+That's where **logistic regression** come in.  The key idea is we want to model the probabilities with a function **different from a straight line**.
+
+The curve that we want is called a **logistic curve** (big shocker!)
+
+The basic structure is of the form 
+
+$$
+f(x)= \frac{1}{1+\exp(-(mx+b))}
+$$
+
+The sign of the parameter $m$, has the strongest influence on the shape of this curve:
+
+**$m>0$**:
+In this case:
+
+$$
+\begin{aligned}
+mx+b&\rightarrow \infty &(x\rightarrow \infty)\\
+mx+b&\rightarrow -\infty &(x\rightarrow -\infty)\\
+\exp(mx+b)&\rightarrow \infty &(x\rightarrow \infty)\\
+\exp(mx+b)&\rightarrow 0 &(x\rightarrow -\infty)\\
+\exp(-(mx+b))&\rightarrow 0 &(x\rightarrow \infty)\\
+\exp(-(mx+b))&\rightarrow \infty &(x\rightarrow -\infty)\\
+1+\exp(-(mx+b))&\rightarrow 1 &(x\rightarrow \infty)\\
+1+\exp(-(mx+b))&\rightarrow \infty &(x\rightarrow -\infty)\\
+\frac{1}{1+\exp(-(mx+b))}&\rightarrow 1 &(x\rightarrow \infty)\\
+\frac{1}{1+\exp(-(mx+b))}&\rightarrow 0 &(x\rightarrow -\infty)\\
+\end{aligned}
+$$
+
+And when $m<0$:
+
+**$m<0$**:
+In this case:
+
+$$
+\begin{aligned}
+mx+b&\rightarrow -\infty &(x\rightarrow \infty)\\
+mx+b&\rightarrow \infty &(x\rightarrow -\infty)\\
+\exp(mx+b)&\rightarrow 0 &(x\rightarrow \infty)\\
+\exp(mx+b)&\rightarrow \infty &(x\rightarrow -\infty)\\
+\exp(-(mx+b))&\rightarrow \infty &(x\rightarrow \infty)\\
+\exp(-(mx+b))&\rightarrow 0 &(x\rightarrow -\infty)\\
+1+\exp(-(mx+b))&\rightarrow \infty &(x\rightarrow \infty)\\
+1+\exp(-(mx+b))&\rightarrow 1 &(x\rightarrow -\infty)\\
+\frac{1}{1+\exp(-(mx+b))}&\rightarrow 0 &(x\rightarrow \infty)\\
+\frac{1}{1+\exp(-(mx+b))}&\rightarrow 1 &(x\rightarrow -\infty)\\\end{aligned}
+$$
+
+Let's give it a try:
+
+```{r}
+logistic=function(x){
+  return(1/(1+exp(-1*(m*x+b))))
+}
+
+b=0
+m=1
+curve(logistic(x),-5,5)
+curve(logistic(x),-20,20)
+```
+
+And when $m<0$
+
+```{r}
+b=0
+m=-1
+curve(logistic(x),-5,5)
+curve(logistic(x),-20,20)
+```
+
+Recall from precalculus the following "rules":
+
+* The graph of $y=f(x-a)$ is the graph of $y=f(x)$ shifted $a$-units to the right
+* The graph of $y=f(mx)$ is the graph of $y=f(x)$, horizontally scaled by a factor of $\frac{1}{m}$
+
+So we can move the location at which the transition from $0$ to $1$ occurs by changing the value of $b$ in
+
+$$
+\frac{1}{1+\exp(-(mx+b))}
+$$
+
+Further, by changing the value of $m$ we can change the "speed" at which the function transitions from *effectively* zero to *effectively* one!
+
+```{r}
+b=0
+m=-1
+curve(logistic(x),-5,5)
+b=3
+m=-1
+curve(logistic(x),-5,5)
+```
+
+Another common function used to model the probabilties is related to the **the cumulative probability distribution function**:
+
+```{r}
+curve(pnorm(x),-5,5)
+```
+
+The first function is related to the something called the **logit function** and the second is related to the **probit function** (more on that in a bit... ha!)
+
+Let's focus on the logistic function.  We are assuming the following relationship:
+
+$$
+p = \frac{1}{1+\exp(-(mx+b))}
+$$
+
+Again, recall that $p$ is the **mean** of the data and related to the **binomial distribution**.  We'd really like to "undo" logistic function.  Surprsingly, this is actually not too complicated if we notice a few relationships.  Let's start by simplifying our calculations a bit by using $\alpha = \exp(mx+b)$:
+
+$$
+\begin{aligned}
+p &= \frac{1}{1+\alpha}\\
+1-p &= 1-\frac{1}{1+\alpha}\\
+&= \frac{1+\alpha}{1+\alpha} - \frac{1}{1+\alpha}\\
+&= \frac{1+\alpha - 1}{1+\alpha}\\
+&= \frac{\alpha}{1+\alpha}
+\end{aligned}
+$$
+Therefore 
+
+$$
+\begin{aligned}
+\frac{p}{1-p}&= \frac{\frac{1}{1+\alpha}}{\frac{\alpha}{1+\alpha}}\\
+&= \frac{1}{\alpha}
+\end{aligned}
+$$
+Now look at what happens if we take the $\ln$ of this expression:
+
+$$
+\begin{aligned}
+\ln\left(\frac{p}{1-p}\right)&= \ln\left(\frac{1}{\alpha}\right)\\
+&=-\ln(\alpha)\\
+&=-\ln(\exp(-(mx+b)))\\
+&= -(-(mx+b))\\
+&=mx+b
+\end{aligned}
+$$
+
+Isn't **that** interesting?  That transformation of the probability (aka the **mean**) is known as the **logit** (It's the log odds).  I estimated various values of $p$ for 10 bins up above... but how do we really do the fitting process?  It seems problematic to bin the data, then run a regression on the aggregated probability values-- it's not exact for one thing.  
+
+## Graphical transformation
+
+Recall that the equation $y=f(x)$ has a corresponding graph.  Let's call it $\Gamma$.  An expression like $y=f(x+a)$ *usually* has a different graph from $y=f(x)$.  How are they related?  Note in the table below the constants $a$ and $b$ may be postive, negative, or zero.  This influences the interpretation of expressions like "Left shift by $a$ units":
+
+Tranformation    |   Effect
+-----------------|--------------
+$y=f(x)$         | Original graph $\Gamma$
+$y=f(x+a)$       | Left shift by $a$ units
+$y=f(x) + a$     | Up shift by $a$ units 
+$y=f(ax)$        | Compression towards $y$-axis by factor of $a$
+$y=af(x)$        | Expansion away from $x$-axis by factor of $a$
+$y=f(ax+b)$      | Pair of transformations:  Left shift by $b$ units followed by compression towards $y$-axis by factor of $a$
+
+Let's see some examples:
+
+```{r,echo=TRUE}
+f=function(x){x^2}
+f(3)
+f(-3)
+f(10)
+F=Vectorize(f)
+curve(F(x),-2,2)
+curve(F(x-0.5),-2,2,add=TRUE,col="blue")
+curve(F(x)+0.5,-2,2,add=TRUE,col="red")
+curve(F(2*x),-2,2,add=TRUE,col="orange",lwd=2)
+curve(2*F(x),-2,2,add=TRUE,col="green",lwd=3)
+```
+
+We can see the same thing with a logistic function:
+
+```{r}
+f=function(x){1/(1+exp(-x))}
+F=Vectorize(f)
+curve(F(x),-3,3)
+abline(h=0,col="gray")
+abline(v=0,col="gray")
+abline(h=c(0,1),lty=2,col="gray")
+curve(F(x-0.5),-3,3,add=TRUE,col="blue")
+curve(F(-2*x),-3,3,add=TRUE,col="green")
+curve(F(2*x),-3,3,add=TRUE,col="orange")
+curve(F(2*x-0.5),-3,3,add=TRUE,col="skyblue",lwd=3)
+```
+
+Now let's build a glm using only the intercept:
+
+```{r}
+model=glm(data=df,family="binomial",admit~1)
+model
+```
+
+Notice that we find an intercept of `r model[1]`.  Since this is predicting the **$logit(p)$** we can deduce the unconditional probability:
+
+$$
+\begin{aligned}
+\textrm{Log odds} &= -0.7652847\\
+\textrm{odds} &= e^{-0.7652847}\\
+&= 0.4652015\\
+\frac{\textrm{odds}}{1+\textrm{odds}} &= \frac{0.4652015}{1+0.4652015}\\
+&= 0.3175
+\end{aligned}
+$$
+
+This is *precisely* the probability of getting admitted ignoring all explanatory variables:
+
+```{r}
+table(df$admit)
+```
+
+$$
+\textrm{Prob} = \frac{127}{273+127} = 0.3175
+$$
+So how do we interpret a model that takes something like `gpa` into consideration:
+
+```{r}
+(model=glm(data=df,family="binomial",admit~gpa))
+```
+
+We need to do, no surprise, a little bit of mathematics (I'll switch between classic exponential notation and $\exp$ when I feel it is appropriate... so read carefully):
+
+$$
+\begin{aligned}
+\textrm{Log Odds} &= -4.358 + 1.051\ \textrm{gpa}\\
+\textrm{Odds} &= \exp(-4.358 + 1.051\ \textrm{gpa})\\
+&= \exp(-4.358)\exp(1.051\ \textrm{gpa})\\
+&=0.0128\ e^{1.051\ \textrm{gpa}}
+\end{aligned}
+$$
+
+So we can tell that when $\textrm{gpa}=0$ the $\textrm{Odds}$ are equal to 0.0128.  Now the key idea is **what happen if we increase $\textrm{gpa}$ by 1?
+
+$$
+\begin{aligned}
+\textrm{Old Odds} &=0.0128\ e^{1.051\ \textrm{gpa}}\\
+\textrm{New Odds}&=0.0128\ e^{1.051(\textrm{gpa}+1)}\\
+&=0.0128\ e^{1.051\ \textrm{gpa}+1.051}\\
+&=0.0128\ e^{1.051\ \textrm{gpa}}e^{1.051}\\
+&=\left(\textrm{Old Odds}\right)\ e^{1.051}\\
+&=\left(\textrm{Old Odds}\right)\ *\ 2.86\\
+\end{aligned}
+$$
+
+So now we are in a familiar situation.  The constant term provides a **baseline value** for the odds of admission (in this examples the $\textrm{Odds}$ are 0.0128 when $\textrm{gpa}=0$ (which translates into 8 to 625 for admission) for every increase in $\textrm{gpa}$ by 1 the odds increase in your favor by a factor of 2.86.  [Note:  Converting decimals into fractions is relatively easy.  After all, 0.0128 = 128/10000=64/5000=32/2500=16/1250=8/625.  However, what if you wanted a rational number that was "smaller" and not exact, but pretty close?  That answer to this question uses a type of mathematics that arose from studying the way that ancient Egyptians represented fractions.  They are called (continued fractions)[https://en.wikipedia.org/wiki/Continued_fraction].  There's another approach that is even better at finding "close" fractions.  That's related to the (Stern Brocot tree)[https://en.wikipedia.org/wiki/Stern%E2%80%93Brocot_tree].  I found a nice Python implementation that I'm including in this document but hiding the code (feel free to look at the source).  The result it produces is 1/78.  So it's not inappropriate to say the odds are about 1 to 78 against is the base-line.
+
+```{python,echo=FALSE}
+import math
+def float_to_fraction (x, error=0.0001):
+  n = int(math.floor(x))
+  x -= n
+  if x < error:
+    return (n, 1)
+  elif 1 - error < x:
+    return (n+1, 1)
+  
+  # The lower fraction is 0/1
+  lower_n = 0
+  lower_d = 1
+  # The upper fraction is 1/1
+  upper_n = 1
+  upper_d = 1
+  while True:
+    # The middle fraction is (lower_n + upper_n) / (lower_d + upper_d)
+    middle_n = lower_n + upper_n
+    middle_d = lower_d + upper_d
+    # If x + error < middle
+    if middle_d * (x + error) < middle_n:
+      # middle is our new upper
+      upper_n = middle_n
+      upper_d = middle_d
+      # Else If middle < x - error
+    elif middle_n < (x - error) * middle_d:
+      # middle is our new lower
+      lower_n = middle_n
+      lower_d = middle_d
+      # Else middle is our best fraction
+    else:
+      return (n * middle_d + middle_n, middle_d)
+      
+#float_to_fraction(0.0128)
+```
+
+Also note that we can convert back to probability:
+
+$$
+\begin{aligned}
+p &= \frac{\textrm{Odds}}{1+\textrm{Odds}}\\
+&= \frac{\exp(\textrm{Log Odds})}{1+\exp(\textrm{Log Odds})}\\
+&= \frac{\exp(\textrm{Log Odds})}{1+\exp(\textrm{Log Odds})}\\
+&= \frac{1}{\exp(-\textrm{Log Odds})+1}\\
+&= \frac{1}{\exp(-\left(-4.358 + 1.051\ \textrm{gpa}\right))+1} &\textrm{[*]}\\
+&= \frac{1}{\exp(4.358 - 1.051\ \textrm{gpa})+1}\\
+\end{aligned}
+$$
+
+Let's overlay this this graph on our jitter-plot.  From the second to the last line (labeled $[*]$ up above), we recognize this as our logistic curve using $b=-4.358$ and $m=1.051$.  For your convenience I'll reproduce the curve.
+
+```{r}
+logistic=function(x){
+  return(1/(1+exp(-1*(m*x+b))))
+}
+b=-4.358;m=1.051
+Logistic=Vectorize(logistic)
+plot(df$gpa,jitter(df$admit,0.1),col=rgb(0,0,0,0.4),pch=".",cex=3)
+curve(Logistic(x),2,4,add=TRUE,col="blue",lwd=2)
+```
+Let's add in some binned values... This time let's use Jackson's suggestion of doing it by quantiles:
+
+```{r}
+cut.marks=c(min(df$gpa),quantile(df$gpa,1:9/10),max(df$gpa))
+bins=cut(df$gpa,cut.marks)
+groups=split(df$admit,bins)
+plot(df$gpa,jitter(df$admit,0.1),col=rgb(0,0,0,0.4),pch=".",cex=3)
+curve(Logistic(x),2,4,add=TRUE,col="blue",lwd=2)
+abline(v=cut.marks,lty=2,col="gray")
+probs=sapply(groups,sum)/sapply(groups,length)
+mids=(cut.marks[-10]+cut.marks[-1])/2
+points(mids,probs,col="red",cex=2)
+```
+
+Not so bad is it?
+
+<!-- Seeing if  I can generate the graph in python and have R plot it... yep
+```python
+import plotly.express as px
+import plotly
+import json
+iris = px.data.iris()
+fig = px.scatter_3d(iris, x='sepal_length', y='sepal_width', z='petal_width',
+              color='species')
+#fig.show()
+#fig = go.Figure(data=data, layout=layout)
+fig = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+```
+
+```r
+library(plotly)
+library(jsonlite)
+#plotly::as_widget(
+  #jsonlite::fromJSON(
+    #reticulate::py$fig, simplifyVector=FALSE))
+```
+-->
+
+It's harder for us to make a graph when we have more than one explanatory variable, but if we only use two then it's not so bad.  Let's use `plotly` and graph the 0's and 1's:
+
+```{r}
+library(plotly)
+plot_ly(data=df,size=0.2) %>% add_markers(x=~gpa,y=~gre,z=~admit) %>% layout(scene = list(xaxis = list(title = 'GPA'), 
+                    yaxis = list(title = 'GRE'),
+                    zaxis = list(title = 'Probability'))) #%>% add_segments()
+
+```
+
+Now we face another big challenge... how do we "bin" these?  The quantile approach is particularly challenging because we are trying to break the input values into a rectangular grid with the property that each square is equally spaced (which is **much** easier than breaking the input into rectangles with equal sized number of members).
+
+So we'll do that:
+
+```{r,echo=FALSE}
+library(stringr)
+bin1=cut(df$gpa,10)
+bin2=cut(df$gre,10)
+groups=split(df$admit,list(bin1,bin2))
+tmp=str_extract(names(groups),"\\([^,]+,")
+lower.x=as.numeric(substr(tmp,2,nchar(tmp)-1))
+tmp=str_extract(names(groups),",[^\\]]+")
+upper.x=as.numeric(substr(tmp,2,nchar(tmp)))
+tmp=str_extract(names(groups),"\\.\\([^,]+,")
+mid.x=(lower.x+upper.x)/2
+lower.y=as.numeric(substr(tmp,3,nchar(tmp)-1))
+tmp=str_extract(names(groups),",[0-9.]+\\]$")
+upper.y=as.numeric(substr(tmp,2,nchar(tmp)-1))
+mid.y=(lower.y+upper.y)/2
+probs=sapply(groups,sum)/sapply(groups,length)
+probs[is.na(probs)]=0
+
+plot_ly(data=df,size=0.2) %>% add_markers(x=~gpa,y=~gre,z=~admit) %>% add_markers(x=mid.x,y=mid.y,z=probs) %>% layout(scene = list(xaxis = list(title = 'GPA'), 
+                    yaxis = list(title = 'GRE'),
+                    zaxis = list(title = 'Probability'))) #%>% add_segments()
+
+```
+
+Looks like a pretty strange distribution... let's add the fitted values (pay close attention to this):
+
+```{r}
+model = glm(data=df,admit~gpa+gre,family="binomial")
+fv=fitted.values(model)
+plot_ly(data=df,size=0.2) %>% add_markers(x=~gpa,y=~gre,z=~admit) %>% add_markers(x=mid.x,y=mid.y,z=probs) %>% 
+add_markers(x=~gpa,y=~gre,z=fv) %>% layout(scene = list(xaxis = list(title = 'GPA'),
+                    yaxis = list(title = 'GRE'),
+                    zaxis = list(title = 'Probability'))) 
+```
+
+So we have as good of a fit as seems reasonable.. but there is a lot of difference between the fitted values and the residuals.
+
+How do we interpret this fit?  The built-in diagonistic plots tell us a bit about the model in terms of the residuals:
+```{r}
+plot(model) #Note the model object is smart enough to return the probabilities.
+            # Observed-fitted.value
+```
+
+However, we're not trying to minimize the squared sum of the residuals when we're performing the fit.  Instead we're more concerned about **maximizing the likelihood**.  This is recast as minimizing the sum of the squared **deviance residuals**.  (more on that in a bit)  
+
+Let's unwrap these terms:
+
+**Likelihood**:  This is the **probability of an observed value given the model**.  For logistic regression this is, quite literally, just the fitted value.  The Likelihood taking the entire data set into consideration is the product of all these terms (that's why we need **independent observations**)... We'd like to pick our parameters so that this value is MAXIMIZED.   This is known as **maximum likelihood**.  However... a really large product is a bit *problematic*.  However... if we take the $\textrm{log}$ of the expression, then the factors turn into summands... and we are maximizing the **sum** of $\textrm{log}$-terms.  
+
+There is a clever and informative way of reframing this.
+
+**Deviance Residuals**:  The **deviance** of an observation is the difference between it's $\textrm{log likelihood}$ under the full model and the $\textrm{log liklihood}$ under a **null model** (for example... what if the model always says `0`.)  Then the likelihood under that model is $1-\textrm{observed value}$. SKipping some details:
+
+$$
+\left(\textrm{fitted value} - (1-\textrm{observed value})\right)^2\\
+\cdots\\
+-2\log(\left|\textrm{fitted} - (1-\textrm{observed})\right|)
+$$
+
+So we **add** all of these together:
+
+```{r}
+-2*sum(log(abs(fv-(1-df$admit))))
+```
+
+Of course, the model stores this value:
+
+```{r}
+model$deviance
+```
+
+There is also a **null deviance** that reflects the deviance of the model using only an intercept term:
+
+```{r}
+model$null.deviance
+```
+
+Let's calculate it by hand as well:
+
+```{r}
+-2*sum(log(abs(0.3175-(1-df$admit)))) #Recall 0.3175 is the "raw" probability
+```
+
+
+
+## Categorizing
+
+You really *shouldn't* use logistic regression as a categorization tool.  But a lot of people do, and it's helpful to think about right now.  Our goal will be:  If predicted $p>=0.5$ we'll call it `1=\textrm{admit}` else we'll call it `0=\textrm{reject}`.
+
+```{r}
+pv=ifelse(fv<0.5,0,1)
+table(pv,df$admit)
+```
+
+This is the **confusion matrix**.  We see the number for
+
+* **True Positives**
+* **True Negatives**
+* **False Positives**
+* **False Negatives**
+
+Let's define some useful measures for **any categorizer:**
+
+* **Accuracy**: Proportion of predictions that were correct.  
+* **Precision**: Proportion classified as "yes" that are correct.
+* **Recall**: Proportion of **true positives** labeled correctly (also known as **sensitivity** also known as **true positive rate**)
+* **Specificity**: Proportion of **true negatives** labeled correctly (also known as **true negative rate**)
+
+
+$$
+\begin{aligned}
+\textrm{Accuracy} &= \frac{\textrm{True Positives}+\textrm{True Negatives}}{\textrm{Total}}\\
+\textrm{Precision} &= \frac{\textrm{True Positives}}{\textrm{True Positives}+\textrm{False Positives}}\\
+\textrm{Recall} &= \frac{\textrm{True Positives}}{\textrm{True Positives}+\textrm{False Negatives}}\\
+\textrm{Specificity} &= \frac{\textrm{True Negatives}}{\textrm{True Negatives}+\textrm{False Positives}}\\
+\textrm{F1} &= 2\left(\frac{\textrm{Precision}*\textrm{Recall}}{\textrm{Precision}+\textrm{Recall}}\right)\\
+\end{aligned}
+$$
+
+This table might help.  Consider a test for a disease:
+
+metric         |    interpretation
+---------------|--------------------
+Accuracy       | P(test result is correct)
+Sensitivity    | P(result is positive \| patient has disease)
+Specificity    | P(result is negative \| patient does not have disease)
+Precision      | P(test result is correct \| result is positive)
+Recall         | P(test result is correct \| result is negative)
+
+## Machine Learning
+
+But let's look at a more **machine learning** approach.  For that we'll use the full data-set.  We will **partition** the data into 
+
+* A **learning set**
+* a **validation set**
+
+The idea being that we want to avoid **overfitting**.  A bit more on that before proceeding-- overfitting is finding a model that is good at fittingt he data, but bad at generalizaing.  
+
+For example, you might realize that the correct answers on your teacher's multiple choice questionsa are always the longest.  Easy to get all of questions correct, but that won't help you much if you take a test from another teacher.
+
+So to recap... set aside part of the data for **validation**.  Train the model on the remaining data.
+
+Before we do this, it's worth noting that there is an extension to this idea alled $k$-fold validation that is used to probe the robustness of the *procedure*.
+
+The idea is to break the data into $k$ groups of roughly equal size. ($k$=10 has been found to be a good size).  The procedure buiilds $k$-models setting aside each of the $k$-groups for a validation set and using the remaining $k-1$ groups to train the model.  The effectiveness of the model is measured for each instance.  This data is then used as an approximation for the effectiveness of the technique.
+
+**NOTES:** 
+
+* Choosing the size of $k$ can make a big difference ($k-10$ is found to work well in many cawes)
+* The training and validation sets need to be large enough to build good statistical models
+* These technqiues can not detet or recover from underlying bias in the data.  (This is often related to the data set being **Non-representative**). 
+
+Let's focus on that last point for a minute.  Remember that example where the "longest" multiple choice answer was the correct one?  That rule will remain true no matter how the data is sliced-- because it is all coming from the same teacher.  THe data is non-representative and hence the technique, in the broader sense, is biased.  Note that there are none of the usual emotional associations to "bias" that we usually associate with the term-- the technique is not making an value judgements, etc.  However, the fact remains that this is an example of completely dispassionate, non-sentient bias.
+
+We are going to use the [`caret` package](http://topepo.github.io/caret/index.html) which stands for Classifcation And REgression Training.  It's a popular machine learning library.  Here are a few more common ones:
+
+* `caret`, `RWeka`, `h2o`, `rattle`: A variety of machine learning techniques along with some helper functions for simplifying common tasks
+* `randomForest: Making random forests
+* `e1071`: Support Vector Machines
+* `rpart`, `tree`, `party`: Classification trees, regression trees, recursive partitioning and a few others 
+* `nnet`: Neural Networks
+* `glmnet`: A varietion of GLM regressions with or without elastic-net (encompasses ridge and lasso regression).  Also include the Cox model (which we don't cover in this class).  Note we frequently use `qpcR`
+* `arules`: *You* remember this one right?  Association rules
+* `kernlab`: kernel based machine learning (more on that later).  Includes Support Vector Machines and some neat clustering algorithms (also quantile regression)
+* `ROCR`: ROC graphs, sensitivty/specificty curves, etc.  Not updated since 2015, but probably doesn't need to be
+* `gbm`: Gradient Boosting Techniques
+
+Anyway... let's get back to it.  (I'm drawing inspiration from an older [R-bloggers article](https://www.r-bloggers.com/evaluating-logistic-regression-models/))
+
+```{r}
+library(caret)
+Train <- createDataPartition(df$admit, p=0.6, list=FALSE) #The capitolization makes it easier to distinguish the cases (Train) from the function (train)
+training <- df[ Train, ]
+testing <- df[ -Train, ]
+model<-train(as.factor(admit)~gpa+gre+rank,data=training,method="glm",family="binomial")
+```
+
+Notice the use of the `train` function.  Rather than using a fitting method specifically designed for logistic regressions (like the `glm` function in `qpcR`) The `train` function uses a grid-based technique to "zoom-in" on the best parameters (this is much more similar to what we saw with the countour maps describing the sum of squared residuals (and the sum of absolute values of residuals)).
+
+Extracting information is a bit different in this package.  Read the following closely.  We will generate a model with `caret` and with `qpcR` and then compare:
+
+```{r}
+caret.model<-train(as.factor(admit)~gpa+gre+rank,data=training,method="glm",family="binomial")
+qpcR.model<-glm(data=training,admit~gpa+gre+rank,family="binomial")
+
+caret.model$finalModel
+qpcR.model
+```
+
+*That's* reassuring!  They both gave the same answer on the training data.
+
+Now how would we test to see (in a nested situation) if one model does a significantly (in the statistics sense) better job than the other?
