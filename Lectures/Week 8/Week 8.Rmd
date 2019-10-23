@@ -2,40 +2,135 @@
 title: "Week 8"
 author: "Peter Dolan"
 date: "10/11/2019"
-output: html_document
+output: 
+  html_document:
+    code_folding: hide
+    toc: true
+    toc_float: true
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+load(file="adabag.rdata") #Previous results were saved
+# loads ucla.boosted.cv
+# ucla.bagged.cv
+# ucla.boosted
 ```
 
-## Response Curve
+## Reminder
 
-Let's finish up what we did last week by looking at one last example of logistic regression.  We will use the width of the crab to estimate the probability that a female crab has male satellites:
+Let's finish up what we did last week by looking at one last example of logistic regression.  We will use the width of the crab to estimate the probability that a female crab has male satellites using $\textrm{width}$.  Let's look at the summary:
 
 ```{r}
+crab=read.table("https://personal.psu.edu/abs12/stat504/online/07_poisson/graphics/crab.txt")
+colnames(crab)=c("obs","color","spine","width","weight","n.sat")
+crab=crab[,-1] #Drop the observation column
+
 crab$hasS = as.numeric(crab$n.sat>0)                       # Make the binary response variable
 model.logistic=glm(data=crab,hasS~width,family=binomial()) # Model it
 summary(model.logistic)
 ```
 
-Now let's look at the confusion matrix:
+It's clear that the model (slightly rounded)
+
+$$
+\textrm{logit}(p) = -12.4 + 0.5\textrm{ width}
+$$
+
+Now let's look at the confusion matrix using $p=0.5$ as our threshold:
 
 ```{r}
 fv=fitted.values(model.logistic)
 ov=crab$hasS
 pv=as.numeric(fv>=0.5)
-table(pv,ov)
+table(observed=ov,predicted.cat=pv)
 ```
 
-That's great as far as it goes... but what if we wanted information on 
-## Decision Trees.
+That's great as far as it goes... but what if we wanted information on a different threshold?  
 
-So we looked at logistic regression and how it is used to estimate the *probability* that a given observation will fall within a target category based upon a collection of values in the explanatory variable.  It is not designed to be used as a categorizer, but we treated it like one anyway and calculated a confusion matrix.  Let me reproduce that:
+## Receiver Operating Characteristic curve
+
+A **graphical plot** that is used for **binary classifier systems** to show the results of changing the **threshold** is called the **receiver operating characteristic curve** (ROC curve for short).
+
+Recall that for binary classifiers there are only four possible results of a classification:
+
+* True Positive
+* True Negative
+* False Positive
+* False Negative
+
+A classic example (which is helpful for building intuition) is a medical test that can only return **positive** or **negative**.  We have examined various measures already, but let's recall a few of the more popular ones:
+
+* Accuracy: $\frac{\textrm{True Positives} + \textrm{True Negatives}}{\textrm{all cases}}$
+* Sensitivity (aka True Positive Rate): $\frac{\textrm{True Positives}}{\textrm{True Positives} + \textrm{False Negatives}}$
+* Specificity (aka True Negative Rate): $\frac{\textrm{True Negatives}}{\textrm{True Negatives} + \textrm{False Positives}}$
+
+In the language of medicine, **Sensitivity** ($\textrm{TPR}$) is concerned with those who **have the disease**.  It is the proportion of those who are sick that are detected by the test.  A test that **always returns positive** will have a sensitivity of 1-- the rarer the condition the worse of an idea it would be to implement such a decision policy.  On the other hand, a test that is perfectly accurate would **also** have a sensitivity of 1.  And that would, clearly be preferable. You have, I hope, all seen examples in your introductory statistics courses of using Bayes rule to discover that for most sufficiently rare diseases the majority of positive results are false positives.  (**NOTE:** applying Bayes rule requires more information than just the sensitivity and the true rate of prevalence).  The missing ingredient is the probability of testing positive if you do **not** have the disease.  In other words, the **false positive rate** Hold on to that thought for a paragraph or two...
+
+The **Specificity** of the test is the equivalent of Sensitivity for those who **do not have the disease**.  The **False Positive Rate** (or *probability of false alarm*) is $1-\textrm{specificity}$.
+
+The ROC curve compares the True Positive Rate (measuring the proportion of people *with* the disease who are detected) along the **x-axis** against the False Positive Rate (measuring the proportion of people **without** the disease who test positive).
+
+Notice that in a binary classifier with a probability, as we change the **threshold of discrimination** we move people from class 0 to class 1.  At a threshold of 0 we say $\textrm{everybody}$ is positive.  Thus $\textrm{TPR}=1$ and $\textrm{FPR}=1$.  At the other extreme-- a threshold of 1 says that $\textrm{nobody}$ is positive and everybody is negative.  Then $\textrm{TPR}=0$ and $\textrm{FPR}=0$.  As the threshold is changed from 1 down to 0 we move people from the 0 category to the 1 category.  So we will be introducing either a $\textrm{true positive}$ or a $\textrm{false positive}$.  This will continue until we travel from $(0,0)$ to $(1,1)$.  
+
+A **good** discriminator will put probabilities near 0 and 1-- so the curve should rapidly move up and away from (0,0), stay high and then end at $(1,1)$.  A perfect discriminator (one that assigns probabilities of 0 and 1) will immediately jump from (0,0) to near (0,1), then jump to (1,1).  That curve has **maximal area**.  A mediochre discriminator will assign a nearly uniform arrangement of predicted probabilities and each change in the threshold will introduce one or two new positive values.  If random chance is used then the true positives and false positives will occur at a rate relative to the true probability of being positive. If that is 50 percent then the ROC curve will be close to $y=x$.  If it's really, really bad, then the cuve will dip **below** the $y=x$ line.
+
+Notice that EVERY confusion matrix is represented by a point in the $[0,1] \times [0,1]$ square.... so the ROC curve for a Poisson-based discriminator is a reflection of how the confusion matrix changes as the threshold does.
+
+In any event the **area under the curve** (abbreviated as $\textrm{AUC}$ is used as a measure of **how good** the discriminator is.
+
+Please note:  
+
+
+* The $x$-axis is concerned with those who **are negative** (but test positive)
+* The $y$-axis is concerned with those who **are positive**
+
+Let's go back to the UCLA data and make the ROC curve for the admission discriminator:
 
 ```{r}
 df <- read.csv("https://stats.idre.ucla.edu/stat/data/binary.csv")
 df$rank=factor(df$rank) # Best for rank to be a factor
+
+model.logistic<-glm(data=df,admit~gre+rank+gpa,family=binomial())
+pp=fitted.values(model.logistic)
+ov=df$admit
+roc=function(threshold){
+  fv=ifelse(pp<threshold,0,1)
+  true.positive=sum((fv==1)&(ov==1))
+  false.positive=sum((fv==1)&(ov==0))
+  tpr=true.positive/sum(ov==1)
+  fpr=false.positive/sum(ov==0)
+  result=c(x=fpr,y=tpr)
+  return(result)
+}
+tmp=Vectorize(roc)
+ROC=function(m){t(tmp(m))}
+plot(0,0,type="n",xlim=c(0,1),ylim=c(0,1),xlab="FPR",ylab="TPR")
+lines(ROC(seq(0,1,length.out=100)))
+```
+
+Consider  the threshold $p=0.5$:
+
+```{r}
+pv=fitted.values(model.logistic)
+fv=ifelse(pp<0.5,0,1)
+ov=df$admit
+table(fv,ov)
+```
+
+So our true positive rate is $30/(30+97)=0.236$ and our false positive rate is $19/(19+254)=0.07$
+
+```{r}
+plot(0,0,type="n",xlim=c(0,1),ylim=c(0,1),ylab="TPR",xlab="FPR")
+lines(ROC(seq(0,1,length.out=100)))
+points(pch="x",0.07,0.236,cex=2)
+```
+
+## Decision Trees.
+
+So we looked at logistic regression and how it is used to estimate the *probability* that a given observation will fall within a target category based upon a collection of values in the explanatory variable.  It is not designed to be used as a categorizer, but we treated it like one anyway and calculated a confusion matrix.  Let me reproduce that using the UCLA admission data:
+
+```{r}
 full.model=glm(data=df,admit~gpa+gre+rank,family=binomial())
 fv=fitted.values(full.model)
 predicted.cat=ifelse(fv>=0.5,1,0)
@@ -53,9 +148,9 @@ table(df$admit)
 
 Our accuracy is 68.25.  However our confusion matrix is much more lop-sided.  Again, this underscores the assertion that the purpose of logistic regression is not to categorize.
 
-Perhaps a better way to make a decision is to use something more suited to classification... such as a decision tree read [this article](https://medium.com/analytics-vidhya/a-guide-to-machine-learning-in-r-for-beginners-decision-trees-c24dfd490abb) now.  
+Perhaps a better way to make a decision is to use something more suited to classification... such as a decision tree read.  
 
-Similar to the first regression tutorial let's use the UCLS data:
+Similar to the first regression tutorial let's use the UCLA data:
 
 ```{r}
 # Load CART packages
@@ -67,7 +162,7 @@ admit.tree=rpart(admit ~ gre + gpa+rank, data=df,method="class")
 prp(admit.tree)
 ```
 
-We built and plotted the tree.  The tutorial Regression II goes into greater depth 
+We built and plotted the tree.  The tutorial **Regression II** goes into greater depth 
 
 So, given a row in the table we follow the directions by answering a series of yes/no questions:
 
@@ -88,6 +183,316 @@ pv=predict(admit.tree,type="class")
 table(df$admit,pv)
 ```
 
-So what is the decision tree doing?  The algorithm **splits** the data into subsets.  
-Each subset is then recursively split (which is why the packages is called `rpart` 
-which is short for recursive partition).  At each split the algorithm attempts to split the cases (based upon the response variable) in such a way as to create the largest possible *reduction in heterogenity of the explanatory variables*.
+### Entropy
+
+So what is the decision tree doing?  I am going to base much of my following lecture on material produced by Brett Lanz in the 2019 book "Machine Learning in R" (and based upon the dataes, apparantly copied almost word for word in 7/9/2018 by Czar Yobero).
+
+The algorithm **splits** the data into subsets.  Each subset is then recursively split (which is why the packages is called `rpart`  which is short for recursive partition).  At each split the algorithm attempts to split the cases (based upon the response variable) in such a way as to create the largest possible *reduction in heterogenity of the explanatory variables*.
+
+One of the most popular algorithms is known as `C5.0` so-called because (Thanks Ariel) it was written in C.  This algorithm was an improvement of `C4.5`, which in turn, was an improvement on `ID3`.  The algorithm `C5.0` uses **entropy**.  For a discrete random variable $X$ with a given **probability distribution**, the entropy is defined as:
+
+$$
+\textrm{Entropy}(X) = -\ \sum_{i=1}^cp_i\lg(p_i)
+$$
+
+Recall that $\lg(n) = \log_2(n)$.  Also notice that the **value** of the random variable $X$ is irrelevant-- it's only the **probabilities** that matter (although each **distinct** value of $X$, $x_i$ leads to its own $p_i$.
+
+Given a **set of cases** $S$ (often called a partition of *cases*). We can look at the **proportions** within the set.  These are our values $p_i$.  For example, in the UCLA data, consider all cases where $\textrm{GPA}=4.00$:
+
+```{r}
+table(df$admit[df$gpa==4.0])
+```
+
+We find $p_0 = 15/(15+13) = 15/28 \approx 0.536$ and $p_1 = 13/28 \approx =.464$.  Hence the entropy associated to this partition would be 
+
+$$
+\begin{aligned}
+\textrm{Entropy} &= -\bigl(0.536*\lg 0.536 + 0.464*\lg 0.464\bigr)\\
+&\approx 0.996
+\end{aligned}
+$$
+
+That's a **high** entropy.  For a **binary response** the entropy can range from $0$ (all the values the same) to $1$-- a 50-50 mix of both possibilities.  Technically $p_i\lg p_i$ is undefined for $p_i=0$.  However the limit as $p_i \rightarrow 0$ for the expression is 0.  This is actually pretty closely related to the sort of big-Oh calculations you have all been doing.  The difference is that we are looking at the behavior of $x\lg x$ as $x$ goes to 0 (instead of $n \lg n$ as $n$ goes to $\infty$).  It's a bit tricky because $\lg x$ is going to $-\infty$ as $x\rightarrow0$ and $x$ is going to $0$ as $x\rightarrow0$.  But $x$ is approaching 0 **faster** than $\lg x$ is trying to get to $-\infty$.  The continuity for $x \ne 0$ the function $f(x) = x\lg x$ means we can get some idea by looking at the graph:
+
+```{r}
+curve(x*log(base=2,x),0,1)
+```
+
+Or... if you know calculus we can look at the limit as $x$ goes to 0:
+
+$$
+\begin{aligned}
+\lim_{x\rightarrow 0} x \lg \left|x\right| &= \lim_{x\rightarrow 0} \frac{\lg \left|x\right|}{1/x}\\
+&= \lim_{x\rightarrow 0} \frac{1/x}{-1/x^2} &\textrm{L'Hôpital's rule}\\
+&= \lim_{x\rightarrow 0} -x\\
+&= 0
+\end{aligned}
+$$
+
+Either way, we have a good justification for defining $p_i\lg p_i$ as 0 when $p_i=0$.
+
+So to recap.  For a binary response:
+
+* Entropy of 0 means all cases belong to the same class
+* Entropy of 1 means an equal mix between the two classes
+
+When we have more than one partition, say $n$ of them we define
+
+$$
+\textrm{Total Entropy} = \sum_{i=1}^n w_i\ \textrm{Entropy}(P_i)
+$$
+
+where $w_i$ = $\frac{\textrm{cases in } P_i}{\textrm{total number of cases}}$.  In other words, the total entropy is the weighted average of the entropy of the various partitions where the terms are weighted by the number of cases in the partition.
+
+Now consider a partition that we are considering splitting into smaller partitions.  We will use some feature $F$ to decide how to do the split (for example, if we split cases into $\textrm{GPA}=4.0$ and $\textrm{GPA}\not= 4.0$ then the features would be $F=\textrm{GPA}$).
+
+Call the original set of cases $S_{\textrm{old}}$ and the new subpartitioned set $S_{\textrm{new}}$.  The **change in entropy** caused the split is called the **Information Gain**.  We keep track of the information gain for various features:
+
+$$
+\textrm{InfoGain}(F) = \textrm{Entropy}(S_\textrm{old}) - \textrm{Entropy}(S_\textrm{new})
+$$
+The `C5.0` algorithm recursively divides the data into partitions seeking to choose a feature (and a threshold for that feature) that provides the maximum information gain.   If the feature is categorical, then all possible split locations can be considered.  If the feature is numeric then a **threshold** can be determined to make the binary split (some algorithms allow for more two splits on the same feature).
+
+The `rpart` package can use a variety of different impurity criteria including entropy and the Gini index.  Their documentation says that in almost all cases, for a binary response variable, the split points are the same under either critera.
+
+### The Gini index
+
+For a given distribution $p_1, p_2, \ldots, p_C$  of objects with $C$ classes in a set consider the action of randomly selecting an object and **then** randomly re-assigning it to a category using the same distribution.  Then the probability that the object comes from class $i$ and is then **misclassified** is 
+
+$$
+p_i(1-p_i) = p_i\sum_{i\ne j}p_j
+$$
+
+If we consider these probabilities over all the $C$ categories then the probability of **misclassification** is:
+
+$$
+\sum_i\sum_{j\ne i}p_ip_j = \sum_i\sum_jp_ip_j - \sum_i p_i^2 = \sum 1-p_i^2
+$$
+
+Which **is** the Gini index for the distribution.
+
+### Extensions
+
+We're not going to go into these.  I'm just letting you be aware that the following ideas are out there-- 
+
+* Add terms to the purity measure that penalize certain types of misclassification more than others
+* Stop tree from developing leaf nodes with small number of cases (**early stopping** or **pre-pruning**)
+* Reduce tree size **after** it is complete (**post-pruning**)
+* Graft subtrees from portion of the tree to another ***subtree raising** and/or **subtree replacement**)
+
+## Ensemble Techniques
+
+This is a pretty small data set.  When the data set is larger there may be conflicting choices, more noise, and other issues that make producing the optimal decision tree problematic. How do we deal with such issues?  Let's introduce some terminology:
+
+* A **learner** is a technique for classifying cases
+* A **weak learner** doesn't do a particularly good job
+* A **strong learner** does better (I'm not going to quantify these terms)
+
+For example a Decision Tree produced by `C.50` is a type of learner.  
+
+An **Ensemble Technique** takes **multiple learners** and combines their expertise.  I highly recommend skimming [Kuncheva  and Whitaker's paper on Measures of Diversity in Classifier Ensembles and Their Relatinship with the Ensemble Accuracy](http://machine-learning.martinsewell.com/ensembles/KunchevaWhitaker2003.pdf).  I strongly suspect some of their discussion about situations where diversity in ensemble learners results in an improved prediction has relevance to human society.
+
+This is a complicated and continously developing area of research.  For decision trees I'm going to discuss (briefly) three techniques:
+
+* Bagging
+* Boosting
+* Random Forests
+
+The first two, bagging and boosting, are used for other classifiers than just decision/regression trees.  
+
+### Bagging
+
+The name of this technique is an abbreviation for **bootstrap aggregation**.  Here's how it works:
+
+For a given training set $T$ (with $n$ cases) sample $n'$ cases **uniformly** and **with replacement**.  Call this data set $T_1$. Make a decision tree using $T_1$ as the data.  Repeat $m$ times... producing $T_2, \ldots, T_m$ and creating decision trees each time.
+
+When all $m$ trees have been produced, then use them together to make a decision.  In the case of categorization, decide **by vote**.  In the case of regression, decide by **averaging**.
+
+Let's use the package `ipred` (short for *Improved Predictors*) to perform bagging on the full UCLA data:
+
+```{r}
+library(ipred)
+library(rpart)
+df2=df
+df2$admit=as.factor(df2$admit) #response should be a factor
+ucla.bagged<-bagging(data=df,admit ~ .,coob=TRUE) #EXPLAIN coob
+print(ucla.bagged)
+```
+
+Let's extract the predictions and compare them to the logistic predictions.  We'll color the scatterplot points as "black" for not-admitted and "green" for admitted:
+
+```{r}
+pv.bagged=predict(ucla.bagged,newdata=df)
+pv.logistic=fitted.values(full.model)
+pv.tree=predict(admit.tree,type="prob")[,"1"]
+ov=df$admit
+
+plot(pv.bagged,pv.logistic,xlab="Bagged Prediction",ylab="Logistic Prediction",col=ifelse(ov==0,"black","green"))
+
+roc=function(threshold,pp){
+  fv=ifelse(pp<threshold,0,1)
+  true.positive=sum((fv==1)&(ov==1))
+  false.positive=sum((fv==1)&(ov==0))
+  tpr=true.positive/sum(ov==1)
+  fpr=false.positive/sum(ov==0)
+  result=c(x=fpr,y=tpr)
+  return(result)
+}
+tmp=Vectorize(roc,"threshold")
+ROC=function(m,pp){t(tmp(m,pp))}
+plot(0,0,type="n",xlim=c(0,1),ylim=c(0,1),xlab="FPR",ylab="TPR")
+lines(ROC(seq(0,1,length.out=100),pv.bagged),col="black")
+lines(ROC(seq(0,1,length.out=100),pv.logistic),col="red")
+lines(ROC(seq(0,1,length.out=100),pv.tree),col="green")
+legend(x="topleft",legend=c("bagged","logistic","tree"),fill=c("black","red","green"))
+```
+
+Let's quickly look at the confusion matrices at a threshold of 50 percent for all the classifiers:
+
+```{r}
+(confusion.bagged=table(ifelse(pv.bagged<0.5,0,1),ov))
+(confusion.tree=table(ifelse(pv.tree<=0.5,0,1),ov))
+(confusion.logistic=table(ifelse(pv.logistic<=0.5,0,1),ov))
+
+(accuracy.bagged=sum(diag(confusion.bagged))/sum(confusion.bagged))
+(accuracy.tree=sum(diag(confusion.tree))/sum(confusion.tree))
+(accuracy.logistic=sum(diag(confusion.logistic))/sum(confusion.logistic))
+```
+
+Notice that every model in the ensemble was built using a random subset of cases.  This means that some observations are left out.  Typically a bit over a third of the observations are left out in building each tree.  The left-out observations are considered to be **out of the bag** (abbreviated `oob`).  The model can be fitted to the values **not included**.  And errors can be calculated for these observations.  This is frequently called the **OOB error**.  One common way to measure this is the **Root Mean Square Error** (abbreviated RMSE).  It's the standard deviation of the residuals.  In a binary classifier, the residuals are either 0,1, or -1.  A residual of 0 means the prediction matched the observation and $\left|\textrm{residual}\right|=1$ means the prediction was different from the observation.  If all the residuals are the same RMSE is 0... this makes it a bit problematic but in real-world situations that won't happen very often.
+
+<!--
+https://afit-r.github.io/tree_based_methods (defines how to look at the error and OOB to ensure we're not underfitting)
+-->
+Of course one problem with bagging is that you lose the easy explanation.  But you tend to get reduced variance and bias in your estimates (averaging tends to do that).  It also helps protect against over-fitting.
+
+**Warning:** For ease of pedagogy I am **not** using cross-validation for these model building exercises... We will discuss what that means down below
+
+### Boosting
+
+Another form of Ensemble Learning is called **Boosting**.  The idea behind boosting is that multiple models are built **sequentially**.  At each stage of the processs, the misclassified cases are given special attention. The weak learning componenets are strung together in a way that produces a good strong learner.  One boosting technique is called `Adaboost` (which is short for adaptive boosting).  It builds incredibly shallow decision trees using a single split.  It then weights the misclassified cases more heavily (so that they count more in the classification) and then repeats.
+
+Another popular technique is called **Gradient Boosting** this one uses gradient descent to find the shortcomings in the previous learner's prediction (I'm borrowing from [Jocelyn D'Souza's Medium Article](https://medium.com/greyatom/a-quick-guide-to-boosting-in-ml-acf7c1585cb5))
+
+The `gbm` library has the `gbm()` function which performs Generalized Boosted Regression Modeling for most of the common regressions... for example, using `distribution="bernoulli"` will perform a boosted logistic regression.
+
+We will use the `adabag` package to perform adaptive boosting on the UCLA data
+
+```{r,eval=FALSE}
+library(adabag)
+ucla.boosted<-boosting(data=df2,admit ~ .) 
+```
+
+**Note:** This takes a minute or two to run.
+```{r}
+pv.boosted=ucla.boosted$prob[,2]
+plot(0,0,type="n",xlim=c(0,1),ylim=c(0,1),xlab="FPR",ylab="TPR")
+lines(ROC(seq(0,1,length.out=100),pv.bagged),col="black")
+lines(ROC(seq(0,1,length.out=100),pv.logistic),col="red")
+lines(ROC(seq(0,1,length.out=100),pv.tree),col="green")
+lines(ROC(seq(0,1,length.out=100),pv.boosted),col="orange",lwd=2)
+legend(x="topleft",legend=c("bagged","logistic","tree","boosted"),fill=c("black","red","green","orange"))
+```
+
+
+We can access the final confusion matrix:
+
+```{r}
+ucla.boosted$confusion
+```
+
+Wow! Look at that accuracy
+
+And we can see the relative importance of the variables too:
+
+```{r}
+ucla.boosted$importance
+```
+
+But here's the thing... the default settings made 400 models.  That's one model for every observation in the data set.... you'd think that since there are very few repeated combinations of explanatory variables that this could be equivalent to a table lookup... and you might be right.
+
+This underscores the risk that boosting can over-fit the data (look at the cross-validation section below for one technique to help defend against this issue.)
+
+### Random Forests
+
+Another ensemble approach used with decision trees is called a **random forest**.  Similar to **bagging** a subset of the data is selected.  However in the case of random forests, the random subset applies not just to rows, but also to features!  In other words, a subtable comprised of fewer rows **and** fewer columns is randomly selected.  The rows are selected **with replacement** (just like bagging).  
+
+As the many random trees are produced, the various explanatory variables involved in the rules are monitored and a running tally of **the most important variables** are produced.
+
+```{r}
+library(randomForest)
+model.rf=randomForest(data=df2,admit~.)
+model.rf$confusion
+pv.rf=predict(model.rf,type="prob")[,2]
+```
+
+We see our accuracy is $\frac{259+31}{259+31+14+96}=\frac{290}{400}=0.725$
+
+Not bad at all.  Let's look at the ROC curve:
+
+```{r}
+plot(0,0,type="n",xlim=c(0,1),ylim=c(0,1),xlab="FPR",ylab="TPR")
+lines(ROC(seq(0,1,length.out=100),pv.bagged),col="black")
+lines(ROC(seq(0,1,length.out=100),pv.logistic),col="red")
+lines(ROC(seq(0,1,length.out=100),pv.tree),col="green")
+lines(ROC(seq(0,1,length.out=100),pv.boosted),col="orange")
+lines(ROC(seq(0,1,length.out=100),pv.rf),col="skyblue",lwd=2)
+legend(x="topleft",legend=c("bagged","logistic","tree","boosted","random forest"),fill=c("black","red","green","orange","skyblue"))
+```
+
+Surprisingly it did not do as well as the main decision tree.  
+
+## Cross validation
+
+Cross validation is a technique to help protect against over-fitting.  It's also a way to test the validity of a technique.  The idea (as we will use it in this section) is to break the data into a fixed number of pieces (let's say 10... which is the default in the package `adabag`).  The data is broken into 10 pieces of roughly equal size.  Ten models are built.  Each one using all the data **except** one segment (hence the 10 models).  The 9 subsets form the **training set** and the remaining subset forms the **validation set**.  
+
+
+Let's use the `boosting.cv()` function (also from `adabag`) that introduces automatic **cross validation** into the procedure:
+
+```{r,eval=FALSE}
+ucla.boosted.cv<-boosting.cv(data=df2,admit ~ .) 
+```
+Here's the output I observed for `boosting.cv`
+
+```
+i:  1 Tue Oct 15 20:40:22 2019 
+i:  2 Tue Oct 15 20:40:45 2019 
+i:  3 Tue Oct 15 20:41:08 2019 
+i:  4 Tue Oct 15 20:41:30 2019 
+i:  5 Tue Oct 15 20:41:53 2019 
+i:  6 Tue Oct 15 20:42:16 2019 
+i:  7 Tue Oct 15 20:42:39 2019 
+i:  8 Tue Oct 15 20:43:01 2019 
+i:  9 Tue Oct 15 20:43:24 2019 
+i:  10 Tue Oct 15 20:43:46 2019 
+```
+
+We can also use `adabag` to perform a bagging procedure as well:
+
+```{r,eval=FALSE}
+ucla.bagged.cv=bagging.cv(data=df2,admit~.)
+```
+
+Let's compare their confusion matrices:
+
+```{r}
+ucla.boosted.cv$confusion
+ucla.bagged.cv$confusion
+```
+
+Wow... so our relative accuracies are:
+
+$$
+\begin{aligned}
+\textrm{Boosted}&=\frac{217+48}{217+48+56+79}\\
+&=0.6626\\
+\textrm{Bagged}&=\frac{253+34}{253+34+93+20}\\
+&=0.7175\\
+\end{aligned}
+$$
+So the accuracies have gone down rather dramatically... but, in exchange, the results are, hopefully, more robust, and will do a better job with new data.
+
+https://towardsdatascience.com/basic-ensemble-learning-random-forest-adaboost-gradient-boosting-step-by-step-explained-95d49d1e2725
+
+https://towardsdatascience.com/a-comprehensive-machine-learning-workflow-with-multiple-modelling-using-caret-and-caretensemble-in-fcbf6d80b5f2
+
