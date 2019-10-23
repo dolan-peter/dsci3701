@@ -1,0 +1,73 @@
+---
+title: "Project Step 1"
+author: "Peter Dolan"
+date: "1/17/2018"
+output: html_document
+---
+# Overview
+
+On the one hand the course project is an assignment worth a bit over one-third of your final grade, but more importantly it is the chance to add to your portfolio by making an artifact that can help you achieve your future goals.  This is a very good opportunity to produce something that sets you apart from other candidates in a competitive environment.  A good project can help you get into graduate school or help you get the kind of job you'd like.  You are going to be spending hours working on this project so you might want to take the opportunity to produce something that can help you for years to come.  Take that into consideration when you are deciding what you want to produce and how much effort you put into it.
+
+## Step 1 components
+
+The first step in your course project has four components:
+
+* **Identify** a project/problem that is of interest to you
+* **Locate** the appropriate data set
+* **Transfer** that data into RStudio
+* **Document** details on the data and the transfer (produce a writeup)
+
+## Identify a project
+
+Think about something that would be of interest to you.  You might find it helpful to get ideas by looking at data sets that already exist.  [Big Data News](https://www.bigdatanews.datasciencecentral.com/profiles/blogs/big-data-50-fascinating-and-free-data-sources-for-data) has a nice collection of data sources.  You will need to talk to me to get final approval for the project.  Most projects are **very** closely tied to the data so you will want to look at your data closely.  
+
+In some ways this is the hardest part of the project-- you need to pick a problem with data **rich enough** to be interesting, but not so large or complicated that you can't work with it.
+
+There are a few different strategies that students have taken in the past:
+
+1. Find a **large** table of data (but not **huge**) and find good ways to summarize the contents and inter-relationships between the contents of the table.  
+2. Find multiple tables of data that are smaller but require comparison and cross-correlation.
+
+
+# Grading
+
+Point breakdowns for each graded item can be found in the canvas rubric.  You will be graded on the following:
+
+* Posting an initial topic in the Canvas discussion
+* Successfully transfering the data to R (see below)
+* Documenting details about the data, your project, and the means necessary to transfer the data into R in a writeup (see below)
+
+## Writeup
+
+Your writeup should include the following
+
+* Your purpose:
+    + What do you hope to understand or describe?
+* Your data:
+    * What is the data?
+    * How was it collected?
+    * Who collected it?
+    * Any other details necessary to properly understanding the data for the purposes of yoru project.
+* The structure of your data:
+    * What are the variables called?
+    * What do they mean? (some data have cryptic labels that need to be translated into English)
+    * What are the *types* of the variables?
+    * Are any NA's present?
+    * Are there any coding issues?
+    * How much data is there?
+* How did you get the data:
+    * Where did you get the data (did you download a file? access a database? use an API to query?)
+* Outline the steps necessary to access and download the data:
+    * Show how the data was imported into R (see below for more details)
+    * What steps were necessary to get the data into the appropriate form?
+    * What possible pitfalls exist
+    * What data was initially trimmed (more may be removed later)
+    * Anything else necessary to properly understand the import process
+    
+### Demonstrating a successful transfer
+
+Part of your writeup for Step 1 includes a detailed explanation of how to transfer the data into R.  I should be able to follow your directions exactly and reproduce the transfer.  Points will be awarded for
+
+* Completeness of explanation: Can I import the data by following your directions?
+* Quality of explanation: Do text and comment contribute to understanding how to perform the transfer?  Are any potential pitfalls explained and discussed?
+* Quality of import:  In the final collection of R objects are the data variables properly represented?  Are any NA's accounted for?  Are there any coding issues?  If so, how are they resolved.

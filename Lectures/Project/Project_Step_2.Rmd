@@ -1,0 +1,72 @@
+---
+title: "Project Stage 2"
+author: "Peter Dolan & Engin Sungur"
+date: "1/17/2018"
+output: html_document
+---
+# Overview
+
+This is the stage of the project where you carefully detail what you have and how you plan to proceed.  For some projects this document will be fairly short.  For other projects this document will be quite long.  It all depends upon the exact project-- some projects have very complicated data and the hard part of the project is understanding that data and putting it into a useful form-- for other projects the complexity lies in what is being done with that project.  
+
+The exact nature of the project will determine the appopriate length.  Typically a short document for Stage 2 is balanced by substantially more work in Stage 3.  
+
+At this point your data should now be in R-- perhaps as a data-frame; perhaps as a list; or perhaps as collection of multiple R objects.  
+
+# The writeup
+
+For Stage 2, you will be producing a **document** (knitted RMarkdown file) introducing us to your data in more detail. Fit the details into a larger narrative.  You need to include the following components, each of which is discussed in greater detail below:
+
+* Start by reminding us of your project and how this data fits into that project. * Describe your data in more detail than you did in stage 1  
+* Describe your initial observations about relationships
+* Discuss sanity check
+* Detail what you would like to do next 
+
+
+## Reminder of project
+
+This is pretty self explanatory.  Don't be too wordy.  Think of this an executve summary.
+
+## Numeric Summarizations
+
+Next tells us about the data in more detail than in stage 1. You should include the following:
+
+A **numeric summarization** of your data-set:
+
+* How many entries are in your data?
+* **Appropriate** numeric summaries for each of your variables.  (This may require transforming the data-- perhaps with a $\log$ transformation)
+* How many NAs exist for each variable?
+
+An **explanation of any transformations**:
+
+If you needed to transform the values in a variable,
+
+* What transform did you apply?
+* Why did you apply it?
+* Does the the transformation cause observations to be dropped?
+* Any other relevant background information necessary to properly understand the transformation and why you chose to employ it.
+
+A **Graphical Exploration** of your data set:
+
+* **Suitable** summarization graph (or graphs) for each variable.
+
+## Understanding the data
+
+Detail your first pass at **understanding** your data set:
+
+* Begin to look for correlations/relations between variables-- don't show us **all** your explorations-- but pick out some key, interesting relationships.  Discuss in words (keep it short-- a few paragraphs) and be sure to include **graphs** that relate 
+
+* Identify outliers-- are you going to keep them or drop them from further analysis?
+
+## Sanity Checks
+
+A **sanity check** is a simple rule-of-thumb, estimate, or test used to make certain nothing has gone disasterously awry-- if, for example, your data included a variable counting the number of times your subject was exposed to Treatment X, then a negative value would not make any sense.  A good sanity check would be that the value in that column was non-negative.  (Depending upon the nature of the study, it might also make sense to ensure that the number is less than some unreasonably large value-- like 100)
+
+* Produce some sanity checks for your data.
+
+* Identify a few key tests of reasonableness for some of the data
+
+## What to do next
+
+This is the lead-in to stage 3 of the project.  Here you will tell us what you plan to do with the data?  The exact nature of your plans will depend **heavily** upon the project.
+
+Will you be performing linear regressions to look for statistically significant relationships?  Will you be using tools to visualize the data using a map?  Will you be building an interactive tool for examining inter-relationships between variables?

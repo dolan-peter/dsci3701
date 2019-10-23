@@ -1,0 +1,189 @@
+---
+title: "Course Project"
+author: "Peter Dolan"
+date: "Fall 2019"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Overview
+
+On the one hand the course project is an assignment worth a bit under one-third of your final grade, but more importantly it is the chance to add to your portfolio by making an artifact that can help you achieve your future goals.  This is a very good opportunity to produce something that sets you apart from other candidates in a competitive environment.  A good project can help you get into graduate school or help you get the kind of job you'd like.  You are going to be spending hours working on this project so you might want to take the opportunity to produce something that can help you for years to come.  Take that into consideration when you are deciding what you want to produce and how much effort you put into it.
+
+The big-picture idea of each stage is discussed below.  Each stage will have a substantially more detailed collection of instructions and rubrics:
+
+# Stage 1: Getting the data
+
+The first step in your course project has five components:
+
+* **Identify** a project/problem that is of interest to you
+* **Locate** the appropriate data set
+* **Transfer** that data into RStudio
+* **Wrangle** the data into useable form
+* **Document** details on the data and the transfer (produce a writeup)
+
+## Things you will be graded on:
+
+You will need to **identify possible topics** and **produce a document**.  
+
+The document must include:
+
+* Your purpose:
+    + What do you plan to do?
+    + What do you hope to understand or describe?
+    + Why are you interested in this topic?
+* Your data:
+    * What is the data?
+    * How was it collected?
+    * Who collected it?
+    * Any other details necessary to properly understanding the data for the purposes of your project.
+* The structure of your data:
+    * What are the variables called?
+    * What do they mean? (some data have cryptic labels that need to be translated into English)
+    * What are the *types* of the variables?
+    * Are any NA's present?
+    * Are there any coding issues?
+    * How much data is there?
+* How did you get the data:
+    * Where did you get the data (did you download a file? access a database? use an API to query?)
+* Outline the steps necessary to access and download the data:
+    * Show how the data was imported into R (see below for more details)
+    * What steps were necessary to get the data into the appropriate form? This is **very important** (see below).  It is the **data-wrangling** portion of the project.
+    * What possible pitfalls exist
+    * What data was initially trimmed (more may be removed later)
+    * Anything else necessary to properly understand the import process
+
+It is **very important** that your dataset have a significant data-wrangling component.  This can be easily achieved by having data that is imported from **multiple sources** and in multiple formats.  However, it is still possible to only have **one** data source if a substantial amount of processing/editing/imputting is necessary to get the data into the proper format.
+
+# Stage 2: Making A Plan
+
+This is the stage of the project where you carefully detail what you have and how you plan to proceed.  I expect to see something along the lines of:
+
+* A **short summarization** of your relevant stage 1 results
+* An exploration of your data using **Exploratory Data Analysis Techniques**
+* A description of the technique(s) that you'll need to apply to the data.  
+* Why your technique(s) is/are a good fit for the data
+
+Since we will likely not have covered your desired technique you do **not** have to completely specify all the details, but you should research techniques sufficiently well to be able to list strengths and weakenesses and explain why it is likely to be a good fit for your data.
+
+At this point your data should now be in R-- perhaps as a data-frame; perhaps as a list; or perhaps as collection of multiple R objects.  
+
+## Things you will be graded on
+
+For Stage 2, you will be producing a **document** (knitted RMarkdown file) introducing us to your data in more detail than stage 1. You need to include the following components in your writeup:
+
+* A reminder of your project and how this data fits into that project. (context) 
+* A description of your data in more detail than you did in stage 1.  Rather than a description of the types of data I will be looking for some **exploratory data analysis**.  This may include numeric summaries, graphic summaries, details of variable transformations, etc.  You should identify issues that might influence your final goal.  If you aren't doing much of this then you should rethink your final project.
+* A description of your initial observations about relationships
+* A Discussion of sanity check
+* Details of what you will do next
+
+# Stage 3:  Data Product
+
+You will apply an **appropriate** technique to your data (by instructor consent other techniques may be applied) to perform *some* form of modeling **or** produce some form of data product.  Examples of good model-building technologies are:
+
+* Generalized Linear Models
+   * Logistic Regression
+   * Poisson Regression
+   * Negative Binomial Regression
+* Decision/classification trees
+   * Boosted
+   * Bagged
+   * Random Forests
+* Neural Networks
+   
+## Things you will be graded on
+
+Here you will be graded on an RMarkdown file that performs and summarizes your technique.  Points will be awarded based upon:
+
+* Quality of the technique
+    + Is it **appropriate** for the project goals?
+    + Does it go **beyond summarizing** the data?  Note:  Some data is complicated enough that converting it to a form suitable for graphing counts as an appropriate Stage 3 technique-- for example in a past project hundreds of megabytes of astronomic data had to be converted from a custom format to one suitable for use in R and then converted to a form suitable for three dimensional display-- that's acceptable)
+* Quality of the documentation:
+    + Is it **concise**?
+    + Is it **clear**?
+    + Does it clearly indicate the techniques applied?
+    + Is appropriate background information supplied?
+    + Can another person **reproduce** the procedure from the documentation?
+    + Will another person **gain understanding** of the procedure from reading the documentation?
+    + Are important results clearly explained?
+    + Are the appropriate tests for model validity applied?
+
+**Note:** The exact format of this writeup will be strongly influenced by the choice you plan to make in Stage 4 (are you producing a document or a Shiny App?)
+
+# Stage 4: Final Product
+
+This is your final presentation of your work, and it is a presentation to share the results of your work.  You have two choices for presentation style (other possiblities will be considered by instructor consent).
+
+1. A document in R
+1. A shiny application
+
+## Document
+
+This is a formal document that should incorporate aspects of your earlier project stages.  Below I list aspects of the project that should be included in your final write up.  Be sure, when including, to create a cohesive structure-- you will be graded down if these components are not part of a well-structured report.  In particular you should include all **important** details but use appropriate summarizations-- large documents are likely to be graded down.
+
+### Project Overview
+
+This is your final explanation of what the project is, why you're doing it, etc.  Much of this will come from earlier stages of the project, but now you are in a position to provide an overview of your findings, to comment on what worked and what didn't work etc.
+
+### Data source: What, Where, How, and Who:
+
+This should **not** be a barrage of all the details-- include **only** those that are necessary to understand the results and procedures that you will be reporting.  Variable names, particularly unclear ones, should be explained.  Summaries, numeric or graphical, that don't contribute to your final result should not be included.  Be sure to include the following:
+
+* The source of the data (that's not just the location online... but also the people who collected it and the procedure(s) they used)
+* How it was gathered
+* The structure of the relevant portions of the data
+* How to get it into R
+* The techniques you are employing
+* Background on those techniques
+* Validation tests of the model you produce
+
+### Data Wrangling
+
+What did you need to do get the data into the appropriate format for analysis.  All relevant code should be included in an appendix and referenced in the main document.
+
+### Techniques: What did you do
+
+You should explain the procedures that were followed and include the R-code necessary to perform the procedures (probably as an appendix).  Include graphical and numeric summaries (when appropriate).  Your RMarkdown file should reproduce your results.  Note:  particularly long calculations can be **saved** and **loaded**.  Relevant R code-chunks can use the `eval=FALSE` tag if necessary.  Ask me for details.
+
+### Results:  What did you discover
+
+Tells us what you found.  Graphical, numeric, etc. results are encouraged, but don't include every possible detail or too many details on directions of inquiry that did not pan out.
+
+### Finally: 
+
+Spelling, grammar, and formatting are part of the process.  Be sure that they are all correct.
+
+## Shiny App
+
+The focus on this style of presentation is somewhat different.  Here you are producing an application that allows your user to dynamically interact with the data that you collected and analyzed in earlier steps.  The focus here is on producing a product that is
+
+* Understandable (your user should know what the application is doing)
+* Dynamic (changes in the controls should result in changes in the output)
+* Informative (manipulating the data should me it possible to reveal associations and/or interactions between the variables)
+
+Your shiny app should still include information about
+
+* The source of the data (that's not just the location online... but also the people who collected it and the procedure(s) they used)
+* How it was gathered
+* The structure of the relevant portions of the data
+
+This can be as simple as a popup page-- but it must be present.
+
+Grading on the shiny app depends more strongly upon the specifics of the project, but there are a few standard sources of points:
+
+* Does the application run?
+* Does it do what it is supposed to do?
+* Is the interface clean and intuitive?
+* Does the app include enough information for an uninformed user to know
+   * What the app is for?
+   * How to use it?
+* Data Source information (as described above)
+
+Your shiny application **must** dynamically interact with the modeling techniques you employ in the previous step (perhaps the shiny application filters the data based upon user input, or perhaps it allows the users to compare and contrast different models.  The shiny application should include a way to (perhaps a tabbed page) to see the diagnostic plots.

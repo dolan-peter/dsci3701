@@ -1,0 +1,121 @@
+---
+title: "MarsdonNeuralNet"
+author: "Peter Dolan"
+date: "10/20/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Chapter 2.2.5 Of Marsden, Implementaton of Neural Network
+
+To perform the matrix multipliation of
+
+$$
+\begin{bmatrix}
+3 & 4 & 5\\
+2 & 3 & 4
+\end{bmatrix}
+\times
+\begin{bmatrix}
+1 & 3\\
+2 & 4\\
+3 & 6
+\end{bmatrix}
+$$
+
+```{python}
+import pc
+from numpy import *
+
+a=array([[3,4,5],[2,3,4]])
+b=array([[1,3],[2,4],[3,5]])
+dot(a,b)
+```
+
+Another useful Python commands is `where()`.  The equivalent in R is `ifelse()` 
+
+```{python}
+where(a>3,1,0)
+```
+
+```{python}
+nData=4
+inputs=concatenate((-ones((nData,1)),inputs,axis=1)
+```
+
+It looks as if Marsland has his code on a github site.  Unfortunately, his book includes code fragments that require things not included in the book AND not in a way that's immediately obvious.
+
+```{python}
+from numpy import *
+
+class pcn:
+    """ A Basic Perceptron (Typed from Marsland's github repo)"""
+    
+    def __init__(self,inputs,targets):
+        """ Constructor"""
+        # Set up network size
+        if ndim(inputs)> 1:
+            self.nIn = shape(inputs)[1]
+        else:
+            self.nIn = 1
+            
+        if ndim(targets)>1:
+            self.nOut = shape(targets)[1]
+        else:
+            self.nOut = 1
+        
+        self.nData = shape(inputs)[0]
+        
+        # Initialize Network
+        
+        self.weights=random.rand(self.nIn+1,self.nOut)*0.01-0.05
+        
+    def pcn_train(self,inputs,targets,eta,nIterations):
+        """ Train the network"""
+        # Add bias nodes
+        inputs = concatenate((inputs,-ones((self.nData,1))),axis=1)
+        # Training
+        change=range(self.nData)
+        
+        for n in range(self.nIterations):
+            self.outputs = self.pcnfwd(inputs)
+            self.weights += eta*dot(transpose(inputs),targets-self.weights)
+            
+            #Randomize inputs
+            random.shuffle(change)
+            inputs=inputs[change,:]
+            targets=targets[change,:]
+            
+    def pcnfwd(self,inputs):
+        """Run the network forward"""
+    
+        outputs = dot(inputs,self.weights)
+    
+        #Threshold the outputs
+        return(where(outputs>0,1,0))
+  
+    def confmat(self,inputs,target):
+        """Confusion Matrix"""
+        
+        # Incorporate bias nodes
+        inputs=concantenate((inputs,-ones(self.nData,1))),axis=1)
+        outputs = dot(inputs,self.weights)
+        
+        nClasses=shape(targets)[1]
+        
+        if nClasses==1:
+            nClasses=2
+            outputs=where(outputs>0,1,0)
+        else:
+            outputs=argmax(outputs,1)
+            targets=argmax(targets,1)
+            
+        cm=zeros((nClasses,nClasses))
+        
+        for i in range(nClasses):
+            for j in range(nClasses):
+                cm[i,j] = sum(where(outputs==i,1,0)*where(outputs==j,1,0))
+```

@@ -1,0 +1,73 @@
+---
+title: "Project_Step_3"
+author: "Peter Dolan"
+date: "5/2/2018"
+output: html_document
+---
+# Stage 3: Data Generalization.
+
+You will apply an **appropriate** advanced technique from Topic 3 to your data (by instructor consent other techniques may be applied). It should include **at least** one of the techniques that you have learned from the following sections:
+
+Section | Title                  | Notes (potential applications)
+--------|------------------------|-----------------------------------------------------------
+7       |Sampling                | In general techniques like **sampling** are appropriate for generating bootstrap estimates.
+9       |Onward with RStudio     | Use advanced techniques in R-- perhaps producing sophisticated custom functions.
+10      | Tweet, Tweet           | Getting information from Twitter-- this might be closely related to **Stage 1** if your project is to analyze social data.  (note:  if this is your plan... let me know early-- it's a good type of project but the deadlines need to be adjusted a bit for a project of this nature)
+11      |Sampling Distributions  | Using Poisson distributions to analyze data
+12      |Textual Data            | Useful for interpreating collections of words (perhaps words gathered from Twitter) 
+13      |Analysis of Textual Data| Making a word cloud... projects involving word clouds alone are not sufficient
+14      |Databases               | Involves moving data to-and-from R to a database for the purposes of storage or analysis-- may be necessary for particularly large data.
+15      |Mashing up Different Sources of Data|  Using R packages to display geographic data
+16      |Line Up, Please         | Using linear regression... projects involving simple linear regerssion alone are not sufficient
+17      |Data Mining: Unsupervised Learning| Using the package `aRules`
+18      |Data Mining: Supervised Learning  | Using Support Vector Machines.
+
+## Things you will be graded on
+
+Here you will be graded on the an RMarkdown file that performs and summarizes your technique.  Points will be awarded based upon:
+
+* Quality of the technique
+    + Is it **appropriate** for the project goals?
+    + Does it go **beyond summarizing** the data?  Note:  Some data is complicated enough that converting it to a form suitable for graphing counts as an appropriate Stage 3 technique-- for example in a past project hundreds of megabytes of astronomic data had to be converted from a custom format to one suitable for use in R and then converted to a form suitable for three dimensional display-- that's acceptable)
+* Quality of the documentation:
+    + Is it **complete**? (see below)
+    + Is it **concise**?
+    + Is it **clear**?
+    + Is it properly **formatted**? (is the grammar reasonable?  Are there spelling mistakes, etc?)
+    + Does it clearly indicate the techniques applied?
+    + Is appropriate background information supplied?
+    + Can another person **reproduce** the procedure from the documentation?
+    + Will another person **gain understanding** of the procedure from reading the documentation?
+    + Are important results clearly explained?
+
+**Note:** The exact format of this writeup will be strongly influenced by the choice you plan to make in Stage 4 (are you producing a document or a Shiny App?)
+
+## What does complete mean?
+
+This document is meant to be a **stand-alone** document.  A non-expert reading the document should understand what you're doing and why.  Code should be included.  If a code-chunk is so long that it detracts from understanding the narrative, put it in a function and include that function in the appendix.
+
+
+The following, at a mininimum, are necessary:
+
+* Motivation
+   * What are you doing and why
+   * How are you planning to do it (in general terms)
+* Data
+   * What is the data
+   * What do the columns means
+   * What are the data types of the columns (explained to non-specialists)
+   * How did you get it?
+   * What did you need to do to get it into a proper structure (if this is long then summarize-- and put the details in an appendix)
+* Technique
+  * What is your special technique?
+  * Provide some background-- perhaps on the package, or on how the procedure works
+* Example
+  * Show how the technique is applied to your data (note:  You don't have to show **everything**.  For example if you're making a a Shiny app you might say that you'll be dynamically creating linear regression models)
+* Findings (if any):  This does not have to be a complete set of results-- but, for example, if you're using regression-- interpret a model, show diagnostic plots, discuss your example.
+* What's next:  Tell us what you need to do to make your finished, final project
+* Conclusion: Wrap everything up in a short section.
+
+   
+## Some notes
+
+Any project involving linear regression should include a summary of a model as well as a few diagnostic plots and their interpretation.

@@ -15,25 +15,68 @@ knitr::opts_chunk$set(echo = TRUE)
 
 Perhaps a better way to make a decision is to use something more suited to classification... such as a decision tree read [this article](https://medium.com/analytics-vidhya/a-guide-to-machine-learning-in-r-for-beginners-decision-trees-c24dfd490abb) now. (**note:** It is quite long. Give yourself some time to go through it.  Type along in the console as you read.) 
 
-```{r quiz}
+```{r quiz,echo=FALSE}
 quiz(
-  question("What are decision trees used for?",
+  question("What can decision trees be used for?",
     answer("classification",correct=TRUE),
     answer("entropy minification"),
     answer("regression", correct = TRUE),
     answer("Outlining a course of action")
   ),
-  question("For a categorical response value, the path from root to node corresponds to which of the following:",
+  question("For a categorical response value the path from root to node corresponds to which of the following:",
     answer("A classification of that case", correct = TRUE),
-    answer(""),
-    answer("stats"),
-    answer("grid", correct = TRUE)
-  )
+    answer("A technique for finding the median of that case"),
+    answer("A hierarchical clustering",correct=TRUE),
+    answer("A regression parameter")
+  ),
+  question("For a continuous response value the path from root to node corresponds to which of the following:",
+    answer("A classification of that case"),
+    answer("A technique for finding the median of that case"),
+    answer("A sequential clustering"),
+    answer("A prediction for the center of the response variable for a specific subset of explanatory values", correct = TRUE)
+  ),
+  question("The CART algorithm tries to split data into subsets so that each subset is",
+    answer("as homogeneous as possible",correct=TRUE),
+    answer("as inhomogeneous as possible"),
+    answer("has the same centroid"),
+    answer("has as much variance as possible")
+  ),
+  question("Which of the following are strengths of decision trees",
+      answer("Very good at identifying relationships that are not consistent with axis lines"),
+      answer("May allow important variables to be identified",correct=TRUE),
+      answer("Resistant to splitting on features with a large number of levels"),
+      answer("Easy interpretation", correct = TRUE)
+    ),
+    question("What modification to a decision tree makes it more similar to logistic regression?",
+        answer("Only binary explanatory variables are allowed"),
+        answer("Make certain to immanentize the eschaton"),
+        answer("Interior nodes are allowed to have more than two children"),
+        answer("The leaf of the tree reports the proportion of cases in the desired category instead of reporting the majority", correct = TRUE)
+      ),
+  question("Gini index is defined as",
+      answer("The bottle matrix"),
+      answer("The information gain"),
+      answer("$-\\ \\displaystyle\\sum p_i \\lg p_i$"),
+      answer("$1-\\displaystyle\\sum_i p_i^2$", correct = TRUE)
+    ),
+    question("Which of the following help deal with overfitting?",
+      answer("Employing cross validation techniques",correct=TRUE),
+      answer("Avoiding tailors"),
+      answer("Removing bad data"),
+      answer("Changing the minbucket size", correct = TRUE)
+    )
+  
 )
+# question("",
+#     answer(""),
+#     answer(""),
+#     answer(""),
+#     answer("", correct = TRUE)
+#   ),
 ```
 
 ## Decision trees Practical
-Similar to the first regression tutorial let's use the UCLS data for  our exploration:
+Similar to the first regression tutorial let's use the UCLA data for  our exploration:
 
 ```{r}
 # Load CART packages
@@ -148,7 +191,7 @@ Note: rel_error should NOT be used in pruning.
 (A rarely used method) Use the first level where xerror ± xstd overlaps with min(xerror) ± xstd. i.e., the level whose lower limit is at or below horizontal line.
 ```
 
-**Exercise:** Now read [this article](http://uc-r.github.io/regression_trees) and reproduce their code (no copy-pasting allowed!) which discusses using regression trees to categorize more than just a binary response.  It's the same basic idea, but the prediction is for more than just 0 or 1.  Notice that the `rpart()` function is using `method="anova"` rather than `method="class"`.
+**Exercise:** Now read [this article](http://uc-r.github.io/regression_trees) and reproduce their code (no copy-pasting allowed!) which discusses using regression trees to categorize more than just a binary response.  It's the same basic idea, but the prediction is for more than just 0 or 1.  Notice that the `rpart()` function is using `method="anova"` rather than `method="class"`.  Itt also shows examples of using **bagging** (see Week 8 notes for more information)
 
 Pay special attention to the discussion around 
 
@@ -158,10 +201,12 @@ Pay special attention to the discussion around
 
 `plotcp(model)`, `printcp(model)`
 
-DEFINE:
+<!--
+DEFINE (these are, mostly, in Week 8 and an earlier tutorial)
 CROSS-VALIDATION ERROR
 PRESS STATISTIC
 MSE
+-->
 ```{r regression-exercise-external exercise}
 library(rsample)
 library(dplyr)
@@ -208,66 +253,20 @@ ames_train <- training(ames_split)
 
 ```
 
+<!--
 POTENTIALLY Read [Leo Breiman and ADele Cutler's manual on Random Forests](https://www.stat.berkeley.edu/~breiman/RandomForests/).  
 
-```{r}
+#```{r}
 #cars<-read.csv("https://archive.ics.uci.edu/ml/machine-learning-databases/car/car.data")
-```
+#```
 ## Boosted Regression
 The package `gbm` will perform boosted regression and the summary provides a nice summary of the relative influence of the explanatory variables:
 
-```{r}
+#```{r}
 library(gbm)
 test=gbm(data=df,admit~gre+gpa+rank)
 summary(test)
-```
-
-## Regression Trees
-
-Rather than just attempting to classify, the partitioning technique can *also* break the explanatory-data space into subspaces... each with their own regression line... think of it as a decision tree whose leaves result in a data set and a regression on that set.
-
-NOTE:  
-DISCUSS DIFFERENCE BETWEEN CLASSIFICATION TREE AND REGRESSION TREE
-MAKE SOME PLOTS
-ADD SOME EXERCISES
-DRAWBACKS AND SHORTCOMINGS OF THIS APPROACH (RANDOM NATURE OF CUTS TOO)
-
-### Exercise with Hint
-
-*Here's an exercise where the chunk is pre-evaulated via the `exercise.eval` option (so the user can see the default output we'd like them to customize). We also add a "hint" to the correct solution via the chunk immediate below labeled `print-limit-hint`.*
-
-Modify the following code to limit the number of rows printed to 5:
-
-```{r print-limit, exercise=TRUE, exercise.eval=TRUE}
-mtcars
-```
-
-```{r print-limit-hint}
-head(mtcars)
-```
-
-### Quiz
-
-*You can include any number of single or multiple choice questions as a quiz. Use the `question` function to define a question and the `quiz` function for grouping multiple questions together.*
-
-Some questions to verify that you understand the purposes of various base and recommended R packages:
-
-```{r quiz}
-quiz(
-  question("Which package contains functions for installing other R packages?",
-    answer("base"),
-    answer("tools"),
-    answer("utils", correct = TRUE),
-    answer("codetools")
-  ),
-  question("Which of the R packages listed below are used to create plots?",
-    answer("lattice", correct = TRUE),
-    answer("tools"),
-    answer("stats"),
-    answer("grid", correct = TRUE)
-  )
-)
-```
+#```
 
 
 ## Non parameteric regression
@@ -276,4 +275,7 @@ quiz(
 
 The techniques we have discussed earlier are all based on an underlying model whose exact from is determined by numeric **parameters**.  The process of regression determines reasonable values for these parameters.  There are other techniques that do not 
 
-One technique that does not rely upon an underlying parametric model for the data is known as **local linear regression** (or **loess**).  As with most non-parametric forms of regressin 
+One technique that does not rely upon an underlying parametric model for the data is known as **local linear regression** (or **loess**).  As with most non-parametric forms of regressin
+
+MOVE to another tutorial
+-->
